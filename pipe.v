@@ -115,17 +115,7 @@ module pipe#(
                    max_right = gap_right[i];
             end
             random<={random[14:0],random[15]^random[10]^random[5]^random[0]};
-            case(game_state)
-                IDLE:
-                begin
-                    for(i=0;i<=4;i=i+1)begin
-                        gap_left[i]<=SCREEN_WIDTH+200*i;
-                        gap_right[i]<=SCREEN_WIDTH+GAPWIDTH+200*i;
-                        gap_bottom[i]<=SCREEN_HEIGHT-40*i;
-                        gap_top[i]<=40*i;
-                    end     
-                end
-                
+            case(game_state)                
                 PLAY:
                 begin
                     for(i=0;i<=4;i=i+1)begin
@@ -145,6 +135,12 @@ module pipe#(
                end
                 default:
                 begin
+                    for(i=0;i<=4;i=i+1)begin
+                        gap_left[i]<=SCREEN_WIDTH+200*i;
+                        gap_right[i]<=SCREEN_WIDTH+GAPWIDTH+200*i;
+                        gap_bottom[i]<=SCREEN_HEIGHT-40*i;
+                        gap_top[i]<=40*i;
+                    end     
                 end
 
             endcase
