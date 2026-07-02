@@ -28,6 +28,7 @@ module tb_game_logic;
         .pause_ctrl(bird_pause),
         .collision(bird_collision),
         .gravity_sel(gravity_sel),
+        .jump_sel(2'b00),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(bird_state)

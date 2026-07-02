@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// 游戏核心包装层：连接 bird、pipe、collision，并生成低速游戏时钟和分数。
+// 游戏核心包装层：连接小鸟、管道、碰撞检测，并生成游戏节拍、分数和音效事件。
 module game_core #(
     parameter integer CLK_HZ = 100000000,
     parameter integer GAME_HZ = 60
@@ -13,10 +13,13 @@ module game_core #(
     input  wire immortal,
     input  wire [1:0] speed_sel,
     input  wire [1:0] gravity_sel,
+    input  wire [1:0] jump_sel,
     output wire signed [15:0] bird_x,
     output wire signed [15:0] bird_y,
     output wire [1:0] game_state,
     output wire collision_hit,
+    output wire jump_event,
+    output reg  score_event,
     output reg  [15:0] score,
     output wire signed [15:0] gap_left0,
     output wire signed [15:0] gap_right0,
@@ -70,7 +73,8 @@ module game_core #(
     reg jump_d;
     reg pause_d;
     reg restart_d;
-    // 控制信号在游戏时钟域内做边沿检测，避免长按时每帧重复触发。
+
+    // 控制信号在游戏节拍域内做边沿检测，避免长按时每帧重复触发。
     always @(posedge game_clk or posedge rst) begin
         if (rst) begin
             jump_d <= 1'b0;
@@ -89,6 +93,8 @@ module game_core #(
     wire bird_rst = rst | restart_pulse;
     wire collision_to_bird;
 
+    assign jump_event = jump_pulse;
+
     bird u_bird (
         .clk(game_clk),
         .rst(bird_rst),
@@ -96,6 +102,7 @@ module game_core #(
         .pause_ctrl(pause_pulse),
         .collision(collision_to_bird),
         .gravity_sel(gravity_sel),
+        .jump_sel(jump_sel),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state)
@@ -166,10 +173,23 @@ module game_core #(
     reg signed [15:0] prev_right4;
     wire signed [15:0] score_line = bird_x - BIRD_HALF_WIDTH;
 
-    // 管道右边界越过小鸟左边界时加分。
+    wire score_hit0 = (prev_right0 >= score_line) && (gap_right0 < score_line);
+    wire score_hit1 = (prev_right1 >= score_line) && (gap_right1 < score_line);
+    wire score_hit2 = (prev_right2 >= score_line) && (gap_right2 < score_line);
+    wire score_hit3 = (prev_right3 >= score_line) && (gap_right3 < score_line);
+    wire score_hit4 = (prev_right4 >= score_line) && (gap_right4 < score_line);
+    wire [2:0] score_delta =
+        {2'b0, score_hit0} +
+        {2'b0, score_hit1} +
+        {2'b0, score_hit2} +
+        {2'b0, score_hit3} +
+        {2'b0, score_hit4};
+
+    // 管道右边界越过小鸟左边界时加分，同时给音效模块一个得分事件。
     always @(posedge game_clk or posedge rst) begin
         if (rst | restart_pulse) begin
             score <= 16'd0;
+            score_event <= 1'b0;
             prev_right0 <= 16'sd0;
             prev_right1 <= 16'sd0;
             prev_right2 <= 16'sd0;
@@ -181,13 +201,12 @@ module game_core #(
             prev_right2 <= gap_right2;
             prev_right3 <= gap_right3;
             prev_right4 <= gap_right4;
+
             if (game_state == 2'b01) begin
-                score <= score
-                    + ((prev_right0 >= score_line) && (gap_right0 < score_line))
-                    + ((prev_right1 >= score_line) && (gap_right1 < score_line))
-                    + ((prev_right2 >= score_line) && (gap_right2 < score_line))
-                    + ((prev_right3 >= score_line) && (gap_right3 < score_line))
-                    + ((prev_right4 >= score_line) && (gap_right4 < score_line));
+                score <= score + score_delta;
+                score_event <= (score_delta != 3'd0);
+            end else begin
+                score_event <= 1'b0;
             end
         end
     end

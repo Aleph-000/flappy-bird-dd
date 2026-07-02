@@ -64,6 +64,7 @@ module top_k7(
     output wire [3:0] b,
     output wire       hs,
     output wire       vs,
+    output wire       beep,
     output wire       BTNX4
 );
     wire rst = ~rstn;
@@ -73,6 +74,7 @@ module top_k7(
     wire immortal;
     wire [1:0] speed_sel;
     wire [1:0] gravity_sel;
+    wire [1:0] jump_sel;
     wire [3:0] btn_clean;
     wire [15:0] sw_clean;
     wire ps2_space_down;
@@ -94,6 +96,7 @@ module top_k7(
         .immortal(immortal),
         .speed_sel(speed_sel),
         .gravity_sel(gravity_sel),
+        .jump_sel(jump_sel),
         .btn_clean(btn_clean),
         .sw_clean(sw_clean),
         .ps2_space_down(ps2_space_down),
@@ -104,6 +107,8 @@ module top_k7(
     wire signed [15:0] bird_y;
     wire [1:0] game_state;
     wire collision_hit;
+    wire jump_event;
+    wire score_event;
     wire [15:0] score;
     wire signed [15:0] gap_left0;
     wire signed [15:0] gap_right0;
@@ -135,10 +140,13 @@ module top_k7(
         .immortal(immortal),
         .speed_sel(speed_sel),
         .gravity_sel(gravity_sel),
+        .jump_sel(jump_sel),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state),
         .collision_hit(collision_hit),
+        .jump_event(jump_event),
+        .score_event(score_event),
         .score(score),
         .gap_left0(gap_left0),
         .gap_right0(gap_right0),
@@ -202,6 +210,14 @@ module top_k7(
         .value(score),
         .segment(SEGMENT),
         .an(AN)
+    );
+
+    audio_effects u_audio (
+        .clk(clk),
+        .rst(rst),
+        .jump_event(jump_event),
+        .score_event(score_event),
+        .beep(beep)
     );
 
     // LED 调试：重力档位、无敌、暂停、跳跃、碰撞、当前游戏状态。
