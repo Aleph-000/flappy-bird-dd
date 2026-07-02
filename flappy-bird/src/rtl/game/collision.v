@@ -35,6 +35,7 @@ module collision#(
     //bird
     parameter signed [15:0]JUMP_V=-9,
     parameter signed [15:0]GRAVITY=1,
+    parameter signed [15:0]GROUND_Y=16'sd420,
     //pipe
     parameter signed [15:0]PIPE_V=-9,
     parameter MINGAP=16'd100,
@@ -114,7 +115,7 @@ module collision#(
             case(game_state)
             PLAY:
                 begin
-                    if(bird_y-BIRD_HEIGHT/2>=SCREEN_HEIGHT||bird_y+BIRD_HEIGHT/2<=0)
+                    if(bird_y+BIRD_HEIGHT/2>=GROUND_Y||bird_y-BIRD_HEIGHT/2<=0)
                     begin
                         judge<=1;
                     end

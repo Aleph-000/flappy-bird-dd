@@ -36,9 +36,12 @@ module pipe#(
     parameter signed [15:0]JUMP_V=-9,
     parameter signed [15:0]GRAVITY=1,
     //pipe
-    parameter signed [15:0]PIPE_V=-9,
-    parameter MINGAP=16'd100,
-    parameter GAPWIDTH=16'd120
+    parameter signed [15:0] PIPE_V=-4,
+    parameter signed [15:0] GROUND_Y=16'sd420,
+    parameter signed [15:0] MIN_GAP_TOP=16'sd60,
+    parameter signed [15:0] GAP_HEIGHT=16'sd140,
+    parameter signed [15:0] GAPWIDTH=16'sd120,
+    parameter signed [15:0] PIPE_SPACING=16'sd200
     )
     (
         input wire clk,
@@ -100,13 +103,12 @@ module pipe#(
         assign gap_right4=gap_right[4];
         assign gap_top4=gap_top[4];
         assign gap_bottom4=gap_bottom[4];
-        //velocity
-        reg signed[15:0]pipe_v;
         integer i;
-        integer j;
         //random
         reg [15:0]random= 16'hACE1;
         reg signed [15:0]max_right;
+        reg signed [15:0]new_gap_top;
+        reg signed [15:0]speed_bonus;
         
         always@(posedge clk)begin
             max_right = SCREEN_WIDTH;
@@ -114,32 +116,43 @@ module pipe#(
                 if (gap_right[i] > max_right)
                    max_right = gap_right[i];
             end
+            // 分数越高略微加速，但限幅，避免后期管子速度失控。
+            if (score >= 16'd20)
+                speed_bonus = 16'sd4;
+            else
+                speed_bonus = score[15:0] / 16'sd5;
+
             random<={random[14:0],random[15]^random[10]^random[5]^random[0]};
             case(game_state)                
                 PLAY:
                 begin
                     for(i=0;i<=4;i=i+1)begin
                         if(gap_right[i]<0)begin
-    
-                            gap_left[i]<=max_right+(random%150);
-                            gap_right[i]<=max_right+(random%150)+GAPWIDTH;
-                            gap_bottom[i]<=MINGAP+(random%(SCREEN_HEIGHT-MINGAP));
-                            gap_top[i]<=(random%(SCREEN_HEIGHT-MINGAP))-(random%200);
+                            // 缺口固定高度，随机上边界限制在天空区域，避免倒置或穿进地面。
+                            new_gap_top = MIN_GAP_TOP + (random % (GROUND_Y - MIN_GAP_TOP - GAP_HEIGHT));
+                            gap_left[i]   <= max_right + PIPE_SPACING;
+                            gap_right[i]  <= max_right + PIPE_SPACING + GAPWIDTH;
+                            gap_top[i]    <= new_gap_top;
+                            gap_bottom[i] <= new_gap_top + GAP_HEIGHT;
                         end
                         else begin
-                            gap_left[i]<=gap_left[i]+PIPE_V-score/5;
-                            gap_right[i]<=gap_right[i]+PIPE_V-score/5;
+                            gap_left[i]<=gap_left[i]+PIPE_V-speed_bonus;
+                            gap_right[i]<=gap_right[i]+PIPE_V-speed_bonus;
                         end
                     end
 
                end
+                PAUSE:
+                begin
+                    // 暂停时保持当前管道位置，恢复游戏后从原位置继续移动。
+                end
                 default:
                 begin
                     for(i=0;i<=4;i=i+1)begin
-                        gap_left[i]<=SCREEN_WIDTH+200*i;
-                        gap_right[i]<=SCREEN_WIDTH+GAPWIDTH+200*i;
-                        gap_bottom[i]<=SCREEN_HEIGHT-40*i;
-                        gap_top[i]<=40*i;
+                        gap_left[i]<=SCREEN_WIDTH+PIPE_SPACING*i;
+                        gap_right[i]<=SCREEN_WIDTH+GAPWIDTH+PIPE_SPACING*i;
+                        gap_top[i]<=16'sd100+16'sd35*i;
+                        gap_bottom[i]<=16'sd100+16'sd35*i+GAP_HEIGHT;
                     end     
                 end
 

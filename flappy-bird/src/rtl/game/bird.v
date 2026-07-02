@@ -34,7 +34,8 @@ module bird#(
     
     //游戏属性
     parameter signed [15:0]JUMP_V=-9,
-    parameter signed [15:0]GRAVITY=1
+    parameter signed [15:0]GRAVITY=1,
+    parameter integer FRAC_BITS = 4
     )
     (
         input wire clk,
@@ -42,27 +43,43 @@ module bird#(
         input wire jump_ctrl,
         input wire pause_ctrl,
         input wire collision,
+        input wire [1:0] gravity_sel,
         output wire signed[15:0]bird_x,
-        output reg signed[15:0]bird_y,
+        output wire signed[15:0]bird_y,
         output reg[1:0] game_state
         
     );
     assign bird_x=16'd250;
     
-    reg signed[15:0]bird_v;  
+    reg signed[23:0] bird_y_fixed;
+    reg signed[23:0] bird_v_fixed;
+    reg signed[23:0] gravity_fixed;
+
+    assign bird_y = bird_y_fixed >>> FRAC_BITS;
+
+    // SW[7:6] 选择重力档位，使用 4 位小数定点数表示小于 1 像素/帧^2 的加速度。
+    always @(*) begin
+        case (gravity_sel)
+            2'b01: gravity_fixed = 24'sd6;   // 0.375 像素/帧^2
+            2'b10: gravity_fixed = 24'sd8;   // 0.500 像素/帧^2
+            2'b11: gravity_fixed = 24'sd12;  // 0.750 像素/帧^2
+            default: gravity_fixed = 24'sd4;  // 0.250 像素/帧^2
+        endcase
+    end
+
     always@(posedge clk or posedge rst)begin
         if(rst)begin
             game_state<=IDLE;
-            bird_y<=SCREEN_HEIGHT/2;
-            bird_v<=16'sd0;
+            bird_y_fixed <= (SCREEN_HEIGHT / 2) <<< FRAC_BITS;
+            bird_v_fixed <= 24'sd0;
         end
         else begin
             case(game_state)
                 //开始菜单
                 IDLE:
                 begin          
-                    bird_y<=SCREEN_HEIGHT/2;
-                    bird_v<=16'sd0;
+                    bird_y_fixed <= (SCREEN_HEIGHT / 2) <<< FRAC_BITS;
+                    bird_v_fixed <= 24'sd0;
                     if(jump_ctrl)begin
                         game_state<=PLAY;
                     end
@@ -79,12 +96,13 @@ module bird#(
                     end
                     else begin
                         if(jump_ctrl)begin
-                            bird_v<=bird_v+JUMP_V+GRAVITY;
+                            bird_v_fixed <= (JUMP_V <<< FRAC_BITS) + gravity_fixed;
+                            bird_y_fixed <= bird_y_fixed + (JUMP_V <<< FRAC_BITS) + gravity_fixed;
                         end
                         else begin
-                            bird_v<=bird_v+GRAVITY;
+                            bird_v_fixed <= bird_v_fixed + gravity_fixed;
+                            bird_y_fixed <= bird_y_fixed + bird_v_fixed + gravity_fixed;
                         end
-                        bird_y<=bird_y+bird_v;
                     end
                 end
                 //死亡
@@ -94,7 +112,7 @@ module bird#(
                 //暂停
                 PAUSE:
                 begin
-                    if(jump_ctrl)begin
+                    if(jump_ctrl || pause_ctrl)begin
                         game_state<=PLAY;
                     end
                 end 

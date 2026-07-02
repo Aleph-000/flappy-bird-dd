@@ -72,6 +72,7 @@ module top_k7(
     wire restart_level;
     wire immortal;
     wire [1:0] speed_sel;
+    wire [1:0] gravity_sel;
     wire [3:0] btn_clean;
     wire [15:0] sw_clean;
     wire ps2_space_down;
@@ -92,6 +93,7 @@ module top_k7(
         .restart_level(restart_level),
         .immortal(immortal),
         .speed_sel(speed_sel),
+        .gravity_sel(gravity_sel),
         .btn_clean(btn_clean),
         .sw_clean(sw_clean),
         .ps2_space_down(ps2_space_down),
@@ -132,6 +134,7 @@ module top_k7(
         .restart_level(restart_level),
         .immortal(immortal),
         .speed_sel(speed_sel),
+        .gravity_sel(gravity_sel),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state),
@@ -201,6 +204,6 @@ module top_k7(
         .an(AN)
     );
 
-    // LED 调试：速度、无敌、暂停、跳跃、碰撞、当前游戏状态。
-    assign LED = {speed_sel, immortal, pause_level, jump_level, collision_hit, game_state};
+    // LED 调试：重力档位、无敌、暂停、跳跃、碰撞、当前游戏状态。
+    assign LED = {gravity_sel, immortal, pause_level, jump_level, collision_hit, game_state};
 endmodule

@@ -112,6 +112,7 @@ module input_control #(
     output wire        restart_level,
     output wire        immortal,
     output wire [1:0]  speed_sel,
+    output wire [1:0]  gravity_sel,
     output wire [3:0]  btn_clean,
     output wire [15:0] sw_clean,
     output wire        ps2_space_down,
@@ -152,4 +153,5 @@ module input_control #(
     assign restart_level = btn_clean[0] | sw_clean[15];
     assign immortal      = sw_clean[1];
     assign speed_sel     = sw_clean[5:4];
+    assign gravity_sel   = sw_clean[7:6];
 endmodule

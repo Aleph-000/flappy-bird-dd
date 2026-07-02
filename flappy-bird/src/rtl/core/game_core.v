@@ -12,6 +12,7 @@ module game_core #(
     input  wire restart_level,
     input  wire immortal,
     input  wire [1:0] speed_sel,
+    input  wire [1:0] gravity_sel,
     output wire signed [15:0] bird_x,
     output wire signed [15:0] bird_y,
     output wire [1:0] game_state,
@@ -94,6 +95,7 @@ module game_core #(
         .jump_ctrl(jump_pulse),
         .pause_ctrl(pause_pulse),
         .collision(collision_to_bird),
+        .gravity_sel(gravity_sel),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state)
