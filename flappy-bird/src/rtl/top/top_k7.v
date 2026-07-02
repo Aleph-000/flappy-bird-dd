@@ -191,7 +191,7 @@ module top_k7(
     );
 
     background_control #(
-        .BACKGROUND_COUNT(1)
+        .BACKGROUND_COUNT(2)
     ) u_background_control (
         .clk(clk),
         .rst(rst),
@@ -255,6 +255,6 @@ module top_k7(
         .beep(beep)
     );
 
-    // LED 调试：皮肤编号、动画低位、跳跃、碰撞和当前游戏状态。
-    assign LED = {skin_id, bird_frame[0], jump_level, collision_hit, game_state};
+    // LED 调试：背景编号、皮肤编号低位、音量档位和游戏状态。
+    assign LED = {background_id, skin_id[1:0], volume_sel, game_state};
 endmodule

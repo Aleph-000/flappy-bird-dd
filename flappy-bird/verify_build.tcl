@@ -6,6 +6,7 @@ set rtl_files [list \
     src/rtl/game/collision.v \
     src/rtl/game/pipe.v \
     src/rtl/control/input_control.v \
+    src/rtl/control/background_control.v \
     src/rtl/control/skin_control.v \
     src/rtl/core/game_core.v \
     src/rtl/display/vga_ctrl.v \

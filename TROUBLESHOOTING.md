@@ -80,6 +80,7 @@ src/rtl/game/bird.v
 src/rtl/game/collision.v
 src/rtl/game/pipe.v
 src/rtl/control/input_control.v
+src/rtl/control/background_control.v
 src/rtl/control/skin_control.v
 src/rtl/core/game_core.v
 src/rtl/display/vga_ctrl.v
@@ -117,7 +118,30 @@ python flappy-bird\tools\generate_skin_rom.py
 
 然后重新生成 bitstream。
 
-## 4. 快速验证流程
+## 4. 新增背景后画面没变化
+
+### 根因
+
+当前背景不是从 PNG 读入 ROM，而是在 `flappy-bird/src/rtl/display/bg_layer.v` 中用逻辑绘制。`backgrounds/<name>/` 是素材和说明的组织目录，不会自动综合成背景。
+
+### 固定修法
+
+新增背景文件夹后，需要同步修改：
+
+```text
+flappy-bird/src/rtl/display/bg_layer.v
+flappy-bird/src/rtl/control/background_control.v 或 top_k7.v 中 BACKGROUND_COUNT
+README.md
+```
+
+并确认 `background_control.v` 已加入：
+
+```text
+flappy-bird/flappy-bird.xpr
+flappy-bird/verify_build.tcl
+```
+
+## 5. 快速验证流程
 
 先做前端检查：
 
