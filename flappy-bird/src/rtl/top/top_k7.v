@@ -48,7 +48,7 @@ module sevenseg_hex(
     end
 endmodule
 
-// K7 板级顶层：连接真实管脚、控制接口、游戏核心和临时 VGA 显示。
+// K7 板级顶层：连接真实管脚、控制接口、游戏核心和分层 VGA 显示。
 module top_k7(
     input  wire       clk,
     input  wire       rstn,
@@ -159,13 +159,13 @@ module top_k7(
         .gap_bottom4(gap_bottom4)
     );
 
-    debug_vga u_vga (
+    display u_display (
         .clk(clk),
         .rst(rst),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state),
-        .collision_hit(collision_hit),
+        .score(score),
         .gap_left0(gap_left0),
         .gap_right0(gap_right0),
         .gap_top0(gap_top0),
@@ -186,11 +186,11 @@ module top_k7(
         .gap_right4(gap_right4),
         .gap_top4(gap_top4),
         .gap_bottom4(gap_bottom4),
-        .r(r),
-        .g(g),
-        .b(b),
-        .hs(hs),
-        .vs(vs)
+        .hsync(hs),
+        .vsync(vs),
+        .vga_r(r),
+        .vga_g(g),
+        .vga_b(b)
     );
 
     sevenseg_hex u_seg (

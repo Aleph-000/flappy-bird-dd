@@ -11,3 +11,5 @@ xsim.dir/
 # Local Vivado project cache and hardware session state
 *.cache/
 *.hw/
+*.runs/
+*.srcs/
