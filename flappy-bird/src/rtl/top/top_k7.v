@@ -191,7 +191,7 @@ module top_k7(
     );
 
     background_control #(
-        .BACKGROUND_COUNT(2)
+        .BACKGROUND_COUNT(4)
     ) u_background_control (
         .clk(clk),
         .rst(rst),

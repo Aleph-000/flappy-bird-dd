@@ -10,7 +10,9 @@ flappy-bird-dd/
 |-- TROUBLESHOOTING.md
 |-- backgrounds/
 |   |-- default/
-|   `-- night/
+|   |-- night/
+|   |-- space/
+|   `-- city/
 |-- skins/
 |   |-- original/
 |   `-- qiu_shi_ying/
@@ -114,14 +116,20 @@ python flappy-bird/tools/generate_skin_rom.py
 backgrounds/<background_name>/
 ```
 
-当前已登记两个背景：
+当前已登记四个背景：
 
 | 编号 | 背景 |
 | --- | --- |
 | `0` | `default` |
 | `1` | `night` |
+| `2` | `space` |
+| `3` | `city` |
 
-FPGA 里的背景由 `flappy-bird/src/rtl/display/bg_layer.v` 程序化绘制；开始界面按 `BTN[1]` 切换背景，游戏开始后锁定当前背景。后续新增背景时，需要在 `bg_layer.v` 中增加对应绘制逻辑，并在 `background_control.v` 的 `BACKGROUND_COUNT` 参数或顶层实例化中增加数量。
+FPGA 里的背景由 `flappy-bird/src/rtl/display/bg_layer.v` 程序化绘制；开始界面按 `BTN[1]` 在 `default -> night -> space -> city` 间循环切换，游戏开始后锁定当前背景。
+
+`backgrounds/<background_name>/` 中的 PNG 是美术参考和归档素材，不会被 Vivado 自动综合成背景。新增背景时，需要在 `bg_layer.v` 中增加对应绘制逻辑，并在 `background_control.v` 的 `BACKGROUND_COUNT` 参数或顶层实例化中增加数量。
+
+`space` 地面使用深蓝岩层和青绿色边缘线；`city` 地面使用灰蓝屋顶色和浅色边缘线。两者碰撞高度仍统一为 `y=420`。
 
 ## 顶层接口
 

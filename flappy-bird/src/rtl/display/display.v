@@ -116,6 +116,7 @@ module display(
         .pixel_x(pixel_x),
         .pixel_y(pixel_y),
         .game_state(game_state),
+        .background_id(background_id),
         .ui_on(ui_on),
         .ui_rgb(ui_rgb)
     );

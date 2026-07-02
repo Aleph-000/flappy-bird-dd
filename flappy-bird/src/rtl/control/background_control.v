@@ -2,7 +2,7 @@
 
 // 背景选择控制：只在开始界面响应切换，游戏开始后锁定当前背景。
 module background_control #(
-    parameter integer BACKGROUND_COUNT = 1
+    parameter integer BACKGROUND_COUNT = 4
 )(
     input  wire       clk,
     input  wire       rst,

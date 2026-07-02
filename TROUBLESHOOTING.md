@@ -141,6 +141,29 @@ flappy-bird/flappy-bird.xpr
 flappy-bird/verify_build.tcl
 ```
 
+### 本次背景/UI 联动记录
+
+当前背景编号为：
+
+```text
+0 default
+1 night
+2 space
+3 city
+```
+
+`background_id` 仍是 2 位信号，最多支持 4 个背景。再次新增第 5 个背景时，不能只改 `BACKGROUND_COUNT`，还必须同步扩大这些接口位宽：
+
+```text
+background_control.v output background_id
+top_k7.v background_id wire 和 LED 拼接
+display.v background_id input
+bg_layer.v background_id input
+ui_layer.v background_id input
+```
+
+`ui_layer.v` 现在根据 `background_id` 切换明暗 UI 配色；如果修改 `ui_layer` 端口，必须同步更新 `display.v` 中的实例化。
+
 ## 5. 快速验证流程
 
 先做前端检查：
