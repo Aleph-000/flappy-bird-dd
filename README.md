@@ -1,89 +1,112 @@
 # Flappy Bird Digital Design Project
 
-本项目是数字逻辑设计课程的 Flappy Bird 小游戏工程，目标是在 K7 FPGA 板上运行。当前版本已经整合游戏逻辑、控制接口、分层 VGA 显示、K7 顶层和管脚约束。
+本项目是数字逻辑设计课程的 FPGA 上板小游戏，实现了 Flappy Bird 的游戏逻辑、VGA 显示、按键/开关/PS2 控制、音效和皮肤动画选择。
 
 ## 文件结构
 
 ```text
 flappy-bird-dd/
 |-- README.md
+|-- skins/                         # 皮肤素材
+|   |-- original/                  # 原始小鸟皮肤
+|   `-- qiu_shi_ying/              # 求是鹰皮肤
 `-- flappy-bird/
-    |-- flappy-bird.xpr
+    |-- flappy-bird.xpr            # Vivado 工程
+    |-- verify_build.tcl           # 一键综合/实现/生成 bitstream
+    |-- tools/
+    |   `-- generate_skin_rom.py   # 从 skins 生成 sprite ROM
     `-- src/
-        |-- constrs/
-        |   `-- k7.xdc
-        |-- sim/
-        |   `-- tb_game_logic.sv
-        `-- rtl/
-            |-- control/
-            |   `-- input_control.v
-            |-- core/
-            |   `-- game_core.v
-            |-- display/
-            |   |-- display.v
-            |   |-- vga_ctrl.v
-            |   |-- bg_layer.v
-            |   |-- pipe_layer.v
-            |   |-- bird_layer.v
-            |   |-- ui_layer.v
-            |   `-- debug_vga.v
-            |-- game/
-            |   |-- bird.v
-            |   |-- pipe.v
-            |   `-- collision.v
-            `-- top/
-                `-- top_k7.v
+        |-- constrs/k7.xdc
+        |-- rtl/
+        |   |-- top/top_k7.v
+        |   |-- control/input_control.v
+        |   |-- control/skin_control.v
+        |   |-- core/game_core.v
+        |   |-- game/bird.v
+        |   |-- game/pipe.v
+        |   |-- game/collision.v
+        |   |-- display/display.v
+        |   |-- display/bird_sprite_rom.v
+        |   |-- display/bird_layer.v
+        |   |-- display/pipe_layer.v
+        |   |-- display/bg_layer.v
+        |   |-- display/ui_layer.v
+        |   |-- display/vga_ctrl.v
+        |   `-- audio/audio_effects.v
+        `-- sim/tb_game_logic.sv
 ```
-
-文件说明：
-
-| 路径 | 说明 |
-| --- | --- |
-| `flappy-bird/flappy-bird.xpr` | Vivado 工程文件，顶层模块为 `top_k7`。 |
-| `flappy-bird/src/constrs/k7.xdc` | K7 板管脚约束，包含时钟、复位、按钮、开关、LED、七段管、VGA、PS/2。 |
-| `flappy-bird/src/rtl/top/top_k7.v` | 板级顶层，连接控制、游戏核心、VGA 显示和调试输出。 |
-| `flappy-bird/src/rtl/control/input_control.v` | 控制接口，负责按钮/开关消抖同步、PS/2 键盘解析、操作信号映射。 |
-| `flappy-bird/src/rtl/core/game_core.v` | 游戏核心封装，连接小鸟、管道、碰撞检测，并产生分数和游戏状态。 |
-| `flappy-bird/src/rtl/game/` | 游戏逻辑模块：`bird`、`pipe`、`collision`。 |
-| `flappy-bird/src/rtl/display/` | VGA 显示模块：时序控制、背景、管道、小鸟、UI 分层合成。 |
-| `flappy-bird/src/sim/tb_game_logic.sv` | 游戏逻辑仿真测试，检查小鸟运动、暂停、管道生成/移动和碰撞边界。 |
 
 ## 上板操作
 
-1. 打开 Vivado，进入 `flappy-bird/flappy-bird.xpr`。
-2. 确认顶层模块是 `top_k7`。
-3. 点击 `Generate Bitstream`，完成后选择 `Open Hardware Manager` 并烧录生成的 `.bit` 文件。
-4. 接好 VGA 显示器；可选接 PS/2 键盘。
-5. 上板后先按 `rstn` 复位键复位一次。
-6. 按 `BTN[3]` 开始/跳跃；接键盘时也可以按 `Space`。
-7. 按 `BTN[1]` 暂停/继续；接键盘时也可以按 `Enter`。
-8. 按 `BTN[0]` 重新开始。
+1. 打开 `flappy-bird/flappy-bird.xpr`。
+2. 点击 `Generate Bitstream`，或在 `flappy-bird/` 目录运行：
 
-可选开关：
+   ```powershell
+   vivado -mode batch -source verify_build.tcl
+   ```
+
+3. 生成的 bit 文件位置：
+
+   ```text
+   flappy-bird/flappy-bird.runs/impl_1/top_k7.bit
+   ```
+
+4. 烧录到 K7 板，接 VGA 显示器。
+
+### 按键
 
 | 控件 | 功能 |
 | --- | --- |
-| `SW[0]` | 跳跃/开始，适合不接键盘时测试。 |
-| `SW[1]` | 无敌模式，屏蔽碰撞导致的游戏结束。 |
-| `SW[2]` | 暂停/继续，适合拨码测试。 |
-| `SW[5:4]` | 游戏速度档位：`00` 60Hz，`01` 75Hz，`10` 90Hz，`11` 120Hz。 |
-| `SW[7:6]` | 重力档位：`00` 最慢，`01` 较慢，`10` 中等，`11` 较快。 |
-| `SW[9:8]` | 跳跃速度档位：`00` 最低，为原始速度的 1/2；`11` 接近原始速度。 |
-| `SW[15]` | 重新开始。 |
+| `rstn` | 低有效复位键，先按一次复位 |
+| `BTN[3]` | 开始游戏 / 跳跃 |
+| `BTN[2]` | 在开始界面切换皮肤 |
+| `BTN[1]` | 暂停 / 继续 |
+| `BTN[0]` | 重新开始 |
+| `Space` | PS2 键盘跳跃 |
+| `Enter` | PS2 键盘暂停 / 继续 |
 
-注意：`BTNX4` 在本 K7 板接口中是按钮使能输出，不是玩家操作按键。顶层会把 `BTNX4` 拉低，使 `BTN[3:0]` 正常工作。
+### 开关
 
-调试输出：
+| 开关 | 功能 |
+| --- | --- |
+| `SW[0]` | 跳跃/开始，便于无键盘测试 |
+| `SW[1]` | 无敌模式，屏蔽碰撞导致的游戏结束 |
+| `SW[2]` | 暂停/继续，便于拨码测试 |
+| `SW[5:4]` | 游戏速度档位：`00` 60Hz，`01` 75Hz，`10` 90Hz，`11` 120Hz |
+| `SW[7:6]` | 重力档位：`00` 最慢，`11` 最快 |
+| `SW[9:8]` | 跳跃初速度档位：`00` 最低，约为原速度 1/2；`11` 接近原速度 |
+| `SW[15]` | 重新开始 |
 
-```verilog
-LED = {gravity_sel, immortal, pause_level, jump_level, collision_hit, game_state};
+`BTNX4` 是 K7 板的按键使能脚，不是玩家操作按键；顶层固定拉低以启用 `BTN[3:0]`。
+
+## 皮肤说明
+
+显示层的小鸟 sprite 固定按 `21x21` 绘制；碰撞判定仍按 `21x16`，对应 `collision.v` 中的 `BIRD_WIDTH=21`、`BIRD_HEIGHT=16`。
+
+每个皮肤放在 `skins/<skin_name>/` 下，支持 1 到 8 张 PNG 帧。推荐目录：
+
+```text
+skins/<skin_name>/frames_21x21/frame_0_21x21.png
+skins/<skin_name>/frames_21x21/frame_1_21x21.png
+...
 ```
 
-七段管显示当前 `score`，用于确认分数逻辑是否在运行。
+也可以使用 `frames_21x16`，生成脚本会居中补透明边到 `21x21`。新增或替换皮肤后运行：
+
+```powershell
+python flappy-bird/tools/generate_skin_rom.py
+```
+
+脚本会更新 `flappy-bird/src/rtl/display/bird_sprite_rom.v`。当前包含两个皮肤：
+
+| 编号 | 皮肤 |
+| --- | --- |
+| `0` | `original` |
+| `1` | `qiu_shi_ying` |
 
 ## 顶层接口
 
-顶层模块位于 `flappy-bird/src/rtl/top/top_k7.v`：
+顶层模块是 `top_k7`：
 
 ```verilog
 module top_k7(
@@ -106,102 +129,20 @@ module top_k7(
 );
 ```
 
-| 信号 | 方向 | 说明 |
-| --- | --- | --- |
-| `clk` | 输入 | K7 板 100MHz 主时钟。 |
-| `rstn` | 输入 | 低有效复位，顶层内部转换为高有效 `rst`。 |
-| `BTN[3:0]` | 输入 | 板载独立按钮。 |
-| `SW[15:0]` | 输入 | 16 位拨码开关。 |
-| `ps2_clk` / `ps2_data` | 输入 | PS/2 键盘时钟和数据。 |
-| `LED[7:0]` | 输出 | 调试 LED。 |
-| `SEGMENT[7:0]` / `AN[3:0]` | 输出 | 七段管段选和位选。 |
-| `r/g/b[3:0]` | 输出 | VGA 12-bit RGB 输出。 |
-| `hs` / `vs` | 输出 | VGA 行同步和场同步。 |
-| `beep` | 输出 | 蜂鸣器方波音效输出，跳跃和得分时发声。 |
-| `BTNX4` | 输出 | 按钮使能脚，顶层固定拉低以启用 `BTN[3:0]`。 |
+`LED = {skin_id, bird_frame[0], jump_level, collision_hit, game_state}`，用于上板调试皮肤切换、动画、跳跃、碰撞和状态机。
 
-## 模块接口
+## 排错文档
 
-### 控制接口 `input_control`
-
-```verilog
-module input_control #(
-    parameter integer DEBOUNCE_COUNT = 2000000
-)(
-    input  wire        clk,
-    input  wire        rst,
-    input  wire [3:0]  btn,
-    input  wire [15:0] sw,
-    input  wire        ps2_clk,
-    input  wire        ps2_data,
-    output wire        jump_level,
-    output wire        pause_level,
-    output wire        restart_level,
-    output wire        immortal,
-    output wire [1:0]  speed_sel,
-    output wire [1:0]  gravity_sel,
-    output wire [1:0]  jump_sel,
-    output wire [3:0]  btn_clean,
-    output wire [15:0] sw_clean,
-    output wire        ps2_space_down,
-    output wire        ps2_enter_down
-);
-```
-
-主要功能：
-
-- 对 `BTN`、`SW` 做同步和消抖。
-- 解码 PS/2 键盘的 `Space` 和 `Enter`。
-- 输出统一的游戏控制信号：跳跃、暂停、重开、无敌、速度档位、重力档位、跳跃速度档位。
-
-### 游戏核心 `game_core`
-
-`game_core` 接收控制信号，输出小鸟坐标、管道缺口坐标、游戏状态、碰撞状态、音效事件和分数。小鸟使用定点数保存位置和速度，默认重力较小，可通过 `SW[7:6]` 调整；跳跃向上初速度可通过 `SW[9:8]` 调整。碰撞检测以背景绿色草地线 `y = 420` 作为地面边界。`top_k7` 将这些信号同时接到 VGA 显示层、音效模块和 LED/七段管调试输出。
-
-当前游戏参数：小鸟碰撞/显示尺寸约为 `21x16`，管子宽度为 `60` 像素，管子初始和回收间距为 `300` 像素。
-
-游戏状态编码：
-
-| 编码 | 状态 |
-| --- | --- |
-| `2'b00` | `IDLE`，等待开始。 |
-| `2'b01` | `PLAY`，游戏中。 |
-| `2'b10` | `GAMEOVER`，游戏结束。 |
-| `2'b11` | `PAUSE`，暂停。 |
-
-### VGA 显示 `display`
-
-`display` 是显示总成模块，内部按以下优先级合成画面：
-
-```text
-UI > Bird > Pipe > Background
-```
-
-| 模块 | 功能 |
-| --- | --- |
-| `vga_ctrl` | 100MHz 输入时钟四分频为约 25MHz 像素使能，产生 640x480@60Hz VGA 时序。 |
-| `bg_layer` | 绘制背景。 |
-| `pipe_layer` | 根据 `gap_left/right/top/bottom` 绘制管道。 |
-| `bird_layer` | 根据 `bird_x`、`bird_y` 绘制小鸟。 |
-| `ui_layer` | 根据 `game_state` 绘制开始、暂停、结束界面。 |
+Vivado 生成失败、漏模块、皮肤未更新等问题记录在 `TROUBLESHOOTING.md`。如果再次出现 generate bitstream 失败，先按其中的检查命令看 `.xpr` 是否又出现 `top_k7.dcp` 或漏 RTL 源文件。
 
 ## 验证记录
 
-已在 Vivado 2025.2 命令行环境验证：
+已在本机 Vivado 2025.2 验证：
 
 ```powershell
-xvlog -sv ...
-xelab tb_game_logic -s tb_game_logic_sim
-xsim tb_game_logic_sim -runall
+xvlog ...
 xelab top_k7 -s top_k7_elab
-vivado -mode tcl
+vivado -mode batch -source verify_build.tcl
 ```
 
-验证结果：
-
-- `tb_game_logic` 通过，覆盖小鸟下落/跳跃/暂停/死亡、管道移动/暂停/合法缺口、地面线和管道碰撞。
-- Verilog 编译通过。
-- 顶层 elaboration 通过。
-- Vivado RTL elaboration 通过。
-- Vivado synthesis/implementation/write_bitstream 通过，0 errors，0 critical warnings。
-- 最新 bitstream 位于 `flappy-bird/flappy-bird.runs/impl_1/top_k7.bit`。
+结果：`synth_1`、`impl_1`、`write_bitstream` 均完成，DRC 为 0 Errors，bitstream 已生成。

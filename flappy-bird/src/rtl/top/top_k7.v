@@ -71,6 +71,7 @@ module top_k7(
     wire jump_level;
     wire pause_level;
     wire restart_level;
+    wire skin_next_level;
     wire immortal;
     wire [1:0] speed_sel;
     wire [1:0] gravity_sel;
@@ -93,6 +94,7 @@ module top_k7(
         .jump_level(jump_level),
         .pause_level(pause_level),
         .restart_level(restart_level),
+        .skin_next_level(skin_next_level),
         .immortal(immortal),
         .speed_sel(speed_sel),
         .gravity_sel(gravity_sel),
@@ -110,6 +112,8 @@ module top_k7(
     wire jump_event;
     wire score_event;
     wire [15:0] score;
+    wire [2:0] skin_id;
+    wire [2:0] bird_frame;
     wire signed [15:0] gap_left0;
     wire signed [15:0] gap_right0;
     wire signed [15:0] gap_top0;
@@ -170,12 +174,23 @@ module top_k7(
         .gap_bottom4(gap_bottom4)
     );
 
+    skin_control u_skin_control (
+        .clk(clk),
+        .rst(rst),
+        .game_state(game_state),
+        .skin_next_level(skin_next_level),
+        .skin_id(skin_id),
+        .frame_index(bird_frame)
+    );
+
     display u_display (
         .clk(clk),
         .rst(rst),
         .bird_x(bird_x),
         .bird_y(bird_y),
         .game_state(game_state),
+        .skin_id(skin_id),
+        .bird_frame(bird_frame),
         .score(score),
         .gap_left0(gap_left0),
         .gap_right0(gap_right0),
@@ -220,6 +235,6 @@ module top_k7(
         .beep(beep)
     );
 
-    // LED 调试：重力档位、无敌、暂停、跳跃、碰撞、当前游戏状态。
-    assign LED = {gravity_sel, immortal, pause_level, jump_level, collision_hit, game_state};
+    // LED 调试：皮肤编号、动画低位、跳跃、碰撞和当前游戏状态。
+    assign LED = {skin_id, bird_frame[0], jump_level, collision_hit, game_state};
 endmodule

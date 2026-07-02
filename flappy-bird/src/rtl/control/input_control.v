@@ -110,6 +110,7 @@ module input_control #(
     output wire        jump_level,
     output wire        pause_level,
     output wire        restart_level,
+    output wire        skin_next_level,
     output wire        immortal,
     output wire [1:0]  speed_sel,
     output wire [1:0]  gravity_sel,
@@ -150,6 +151,7 @@ module input_control #(
 
     // 操作映射：BTN3/Space/SW0 跳跃，BTN1/Enter/SW2 暂停。
     assign jump_level    = btn_clean[3] | sw_clean[0] | ps2_space_down;
+    assign skin_next_level = btn_clean[2];
     assign pause_level   = btn_clean[1] | sw_clean[2] | ps2_enter_down;
     assign restart_level = btn_clean[0] | sw_clean[15];
     assign immortal      = sw_clean[1];

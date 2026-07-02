@@ -1,162 +1,51 @@
 `timescale 1ns / 1ps
 
-// ============================================================
-// Module: bird_layer
-// Function:
-//   Draw bird layer according to current pixel position.
-//
-// Input:
-//   pixel_x / pixel_y:
-//      current VGA pixel coordinate
-//
-//   bird_x / bird_y:
-//      center coordinate of the bird
-//
-// Output:
-//   bird_on:
-//      1 means current pixel belongs to the bird
-//
-//   bird_rgb:
-//      bird color in 12-bit RGB format
-// ============================================================
-
+// 小鸟显示层：使用 21x21 sprite 绘制；碰撞高度仍在 collision.v 中按 21x16 计算。
 module bird_layer(
-    input  wire [9:0] pixel_x, // 当前像素横坐标
-    input  wire [9:0] pixel_y, // 当前像素纵坐标
-
-    input  wire signed [15:0] bird_x, // 小鸟中心横坐标
-    input  wire signed [15:0] bird_y, // 小鸟中心纵坐标
-
-    output wire        bird_on,  // 当前像素是否属于小鸟
-    output reg  [11:0] bird_rgb  // 小鸟层输出颜色，12-bit RGB
+    input  wire [9:0] pixel_x,
+    input  wire [9:0] pixel_y,
+    input  wire signed [15:0] bird_x,
+    input  wire signed [15:0] bird_y,
+    input  wire [1:0] game_state,
+    input  wire [2:0] skin_id,
+    input  wire [2:0] frame_index,
+    output wire       bird_on,
+    output wire [11:0] bird_rgb
 );
+    localparam [1:0] IDLE = 2'b00;
+    localparam signed [15:0] SPRITE_SIZE = 16'sd21;
+    localparam signed [15:0] IDLE_PREVIEW_X = 16'sd320;
+    localparam signed [15:0] IDLE_PREVIEW_Y = 16'sd185;
 
-    // ========================================================
-    // Basic parameters
-    // ========================================================
+    wire signed [15:0] sx = {6'b0, pixel_x};
+    wire signed [15:0] sy = {6'b0, pixel_y};
 
-    localparam signed [15:0] BIRD_WIDTH  = 16'sd21;
-    localparam signed [15:0] BIRD_HEIGHT = 16'sd16;
+    // IDLE 界面显示居中的皮肤预览；游戏中按物理坐标绘制。
+    wire signed [15:0] draw_x = (game_state == IDLE) ? IDLE_PREVIEW_X : bird_x;
+    wire signed [15:0] draw_y = (game_state == IDLE) ? IDLE_PREVIEW_Y : bird_y;
+    wire signed [15:0] sprite_left = draw_x - SPRITE_SIZE / 2;
+    wire signed [15:0] sprite_top  = draw_y - SPRITE_SIZE / 2;
+    wire signed [15:0] local_x_signed = sx - sprite_left;
+    wire signed [15:0] local_y_signed = sy - sprite_top;
 
-    // ========================================================
-    // Color palette
-    // ========================================================
+    wire in_sprite_box =
+        (local_x_signed >= 16'sd0) && (local_x_signed < SPRITE_SIZE) &&
+        (local_y_signed >= 16'sd0) && (local_y_signed < SPRITE_SIZE);
 
-    localparam [11:0] C_BIRD       = 12'hFD0; // 小鸟身体黄色
-    localparam [11:0] C_BIRD_WING  = 12'hD80; // 小鸟翅膀深黄
-    localparam [11:0] C_BIRD_BEAK  = 12'hF60; // 小鸟嘴巴橙色
-    localparam [11:0] C_OUTLINE    = 12'h000; // 黑色边框
-    localparam [11:0] C_WHITE      = 12'hFFF; // 白色眼睛
+    wire [4:0] local_x = in_sprite_box ? local_x_signed[4:0] : 5'd0;
+    wire [4:0] local_y = in_sprite_box ? local_y_signed[4:0] : 5'd0;
+    wire sprite_alpha;
+    wire [11:0] sprite_rgb;
 
-    // ========================================================
-    // Convert pixel coordinate to signed value
-    // ========================================================
+    bird_sprite_rom u_sprite_rom (
+        .skin_id(skin_id),
+        .frame_index(frame_index),
+        .sprite_x(local_x),
+        .sprite_y(local_y),
+        .alpha(sprite_alpha),
+        .rgb(sprite_rgb)
+    );
 
-    wire signed [15:0] sx;
-    wire signed [15:0] sy;
-
-    assign sx = {6'b0, pixel_x};
-    assign sy = {6'b0, pixel_y};
-
-    // ========================================================
-    // Bird position
-    //
-    // bird_x / bird_y are center coordinates.
-    // Convert them to top-left coordinates for drawing.
-    // ========================================================
-
-    wire signed [15:0] bird_left;
-    wire signed [15:0] bird_top;
-
-    assign bird_left = bird_x - BIRD_WIDTH  / 2;
-    assign bird_top  = bird_y - BIRD_HEIGHT / 2;
-
-    // ========================================================
-    // Bird local coordinate
-    //
-    // bird_dx / bird_dy are coordinates inside the bird box.
-    // ========================================================
-
-    wire signed [15:0] bird_dx;
-    wire signed [15:0] bird_dy;
-
-    assign bird_dx = sx - bird_left;
-    assign bird_dy = sy - bird_top;
-
-    // ========================================================
-    // Bird region
-    // ========================================================
-
-    assign bird_on =
-        (sx >= bird_left) &&
-        (sx <  bird_left + BIRD_WIDTH) &&
-        (sy >= bird_top) &&
-        (sy <  bird_top + BIRD_HEIGHT);
-
-    // ========================================================
-    // Bird parts
-    //
-    // 这一版仍然是简单坐标画法：
-    //   body    : yellow
-    //   wing    : dark yellow
-    //   beak    : orange
-    //   eye     : white
-    //   outline : black
-    //
-    // 后面如果要美化，可以在这个模块内部改成 sprite ROM，
-    // display 顶层不需要跟着大改。
-    // ========================================================
-
-    wire bird_outline;
-    wire bird_wing;
-    wire bird_beak;
-    wire bird_eye;
-
-    assign bird_outline =
-        bird_on &&
-        (
-            (bird_dx < 16'sd1) ||
-            (bird_dx >= BIRD_WIDTH - 16'sd1) ||
-            (bird_dy < 16'sd1) ||
-            (bird_dy >= BIRD_HEIGHT - 16'sd1)
-        );
-
-    assign bird_wing =
-        bird_on &&
-        (bird_dx >= 16'sd5) && (bird_dx < 16'sd12) &&
-        (bird_dy >= 16'sd8) && (bird_dy < 16'sd12);
-
-    assign bird_beak =
-        bird_on &&
-        (bird_dx >= 16'sd16) && (bird_dx < BIRD_WIDTH) &&
-        (bird_dy >= 16'sd6) && (bird_dy < 16'sd10);
-
-    assign bird_eye =
-        bird_on &&
-        (bird_dx >= 16'sd14) && (bird_dx < 16'sd17) &&
-        (bird_dy >= 16'sd3) && (bird_dy < 16'sd6);
-
-    // ========================================================
-    // Bird color priority
-    //
-    // 后面的颜色覆盖前面的颜色：
-    // body < wing < beak < eye < outline
-    // ========================================================
-
-    always @(*) begin
-        bird_rgb = C_BIRD;
-
-        if (bird_wing)
-            bird_rgb = C_BIRD_WING;
-
-        if (bird_beak)
-            bird_rgb = C_BIRD_BEAK;
-
-        if (bird_eye)
-            bird_rgb = C_WHITE;
-
-        if (bird_outline)
-            bird_rgb = C_OUTLINE;
-    end
-
+    assign bird_on = in_sprite_box && sprite_alpha;
+    assign bird_rgb = sprite_rgb;
 endmodule
