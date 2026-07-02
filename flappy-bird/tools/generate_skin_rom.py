@@ -12,6 +12,7 @@ SPRITE_W = 21
 SPRITE_H = 21
 MAX_FRAMES = 8
 ALPHA_THRESHOLD = 32
+SKIN_ORDER = ["qiu_shi_ying", "dyb", "space", "original"]
 
 
 def frame_number(path: Path) -> int:
@@ -94,7 +95,12 @@ def load_frame(path: Path) -> list[tuple[int, int, int]]:
 def discover_skins() -> list[tuple[str, list[Path]]]:
     ensure_original_skin()
     skin_dirs = [p for p in SKINS_DIR.iterdir() if p.is_dir()]
-    skin_dirs.sort(key=lambda p: (0 if p.name == "original" else 1, p.name.lower()))
+    skin_dirs.sort(
+        key=lambda p: (
+            SKIN_ORDER.index(p.name) if p.name in SKIN_ORDER else len(SKIN_ORDER),
+            p.name.lower(),
+        )
+    )
 
     skins: list[tuple[str, list[Path]]] = []
     for skin_dir in skin_dirs:

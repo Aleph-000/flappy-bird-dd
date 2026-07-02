@@ -15,6 +15,9 @@ set rtl_files [list \
     src/rtl/display/bird_sprite_rom.v \
     src/rtl/display/bird_layer.v \
     src/rtl/display/ui_layer.v \
+    src/rtl/display/font_rom_8x8.v \
+    src/rtl/display/text_vram.v \
+    src/rtl/display/text_layer.v \
     src/rtl/display/display.v \
     src/rtl/audio/audio_effects.v \
     src/rtl/top/top_k7.v \

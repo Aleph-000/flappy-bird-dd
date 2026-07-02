@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-// VGA 显示总成：组合背景、管子、小鸟 sprite 和 UI 图层。
+// VGA 显示总成：背景、管子、小鸟、UI 和文字层按优先级混合。
 module display(
     input  wire clk,
     input  wire rst,
@@ -9,7 +9,7 @@ module display(
     input  wire [1:0] game_state,
     input  wire [2:0] skin_id,
     input  wire [2:0] bird_frame,
-    input  wire [1:0] background_id,
+    input  wire [2:0] background_id,
     input  wire [15:0] score,
 
     input  wire signed [15:0] gap_left0,
@@ -46,9 +46,6 @@ module display(
     wire [9:0] pixel_x;
     wire [9:0] pixel_y;
 
-    // score 目前由七段管显示，VGA 层暂不绘制；保留端口便于后续扩展。
-    wire [15:0] unused_score = score;
-
     vga_ctrl u_vga_ctrl (
         .clk(clk),
         .rst(rst),
@@ -72,6 +69,7 @@ module display(
     pipe_layer u_pipe_layer (
         .pixel_x(pixel_x),
         .pixel_y(pixel_y),
+        .background_id(background_id),
         .gap_left0(gap_left0),
         .gap_right0(gap_right0),
         .gap_top0(gap_top0),
@@ -121,6 +119,21 @@ module display(
         .ui_rgb(ui_rgb)
     );
 
+    wire text_on;
+    wire [11:0] text_rgb;
+    text_layer u_text_layer (
+        .clk(clk),
+        .rst(rst),
+        .pixel_x(pixel_x),
+        .pixel_y(pixel_y),
+        .game_state(game_state),
+        .skin_id(skin_id),
+        .background_id(background_id),
+        .score(score),
+        .text_on(text_on),
+        .text_rgb(text_rgb)
+    );
+
     reg [11:0] rgb_reg;
     assign vga_r = rgb_reg[11:8];
     assign vga_g = rgb_reg[7:4];
@@ -137,8 +150,10 @@ module display(
                 rgb_reg = bird_rgb;
             if (ui_on)
                 rgb_reg = ui_rgb;
+            if (text_on)
+                rgb_reg = text_rgb;
 
-            // 开始界面中，小鸟 sprite 作为皮肤预览显示在 UI 面板上方。
+            // 开始界面中，小鸟预览保持最高优先级，不被文字或面板遮住。
             if ((game_state == IDLE) && bird_on)
                 rgb_reg = bird_rgb;
         end

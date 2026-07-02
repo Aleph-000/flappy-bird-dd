@@ -1,213 +1,105 @@
 `timescale 1ns / 1ps
 
-// ============================================================
-// Module: pipe_layer
-// Function:
-//   Draw pipe layer for Flappy Bird.
-//
-// Input:
-//   pixel_x / pixel_y:
-//      current VGA pixel coordinate
-//
-//   gap_left / gap_right / gap_top / gap_bottom:
-//      the passable gap area of each pipe
-//
-// Output:
-//   pipe_on:
-//      1 means current pixel belongs to a pipe
-//
-//   pipe_rgb:
-//      pipe color in 12-bit RGB format
-// ============================================================
-
+// 管子显示层：根据 5 组 gap 坐标绘制上下管道。
+// gap 表示可通过空隙，管子本体在 gap 上方和下方。
 module pipe_layer(
-    input  wire [9:0] pixel_x, // 当前像素横坐标
-    input  wire [9:0] pixel_y, // 当前像素纵坐标
+    input  wire [9:0] pixel_x,
+    input  wire [9:0] pixel_y,
+    input  wire [2:0] background_id,
 
-    // ========================================================
-    // Pipe0 gap coordinates
-    // gap 表示"可通过空隙"，不是管道本体
-    // ========================================================
-    input  wire signed [15:0] gap_left0,    // 第0根管道空隙左边界
-    input  wire signed [15:0] gap_right0,   // 第0根管道空隙右边界
-    input  wire signed [15:0] gap_top0,     // 第0根管道空隙上边界
-    input  wire signed [15:0] gap_bottom0,  // 第0根管道空隙下边界
-
+    input  wire signed [15:0] gap_left0,
+    input  wire signed [15:0] gap_right0,
+    input  wire signed [15:0] gap_top0,
+    input  wire signed [15:0] gap_bottom0,
     input  wire signed [15:0] gap_left1,
     input  wire signed [15:0] gap_right1,
     input  wire signed [15:0] gap_top1,
     input  wire signed [15:0] gap_bottom1,
-
     input  wire signed [15:0] gap_left2,
     input  wire signed [15:0] gap_right2,
     input  wire signed [15:0] gap_top2,
     input  wire signed [15:0] gap_bottom2,
-
     input  wire signed [15:0] gap_left3,
     input  wire signed [15:0] gap_right3,
     input  wire signed [15:0] gap_top3,
     input  wire signed [15:0] gap_bottom3,
-
     input  wire signed [15:0] gap_left4,
     input  wire signed [15:0] gap_right4,
     input  wire signed [15:0] gap_top4,
     input  wire signed [15:0] gap_bottom4,
 
-    output wire        pipe_on,  // 当前像素是否属于任意一根管道
-    output wire [11:0] pipe_rgb  // 管道颜色，12-bit RGB
+    output wire        pipe_on,
+    output wire [11:0] pipe_rgb
 );
+    localparam signed [15:0] GROUND_Y = 16'sd420;
 
-    // ========================================================
-    // Basic parameters
-    // ========================================================
+    localparam [2:0] BG_CITY    = 3'd0;
+    localparam [2:0] BG_LAB     = 3'd1;
+    localparam [2:0] BG_SPACE   = 3'd2;
+    localparam [2:0] BG_ZJG     = 3'd3;
+    localparam [2:0] BG_NIGHT   = 3'd4;
+    localparam [2:0] BG_DEFAULT = 3'd5;
 
-    localparam signed [15:0] GROUND_Y = 16'sd420; // 地面开始位置，管道不画到地面以下
+    wire signed [15:0] sx = {6'b0, pixel_x};
+    wire signed [15:0] sy = {6'b0, pixel_y};
 
-    // ========================================================
-    // Color palette
-    // ========================================================
+    wire pipe0_on = (sx >= gap_left0) && (sx < gap_right0) &&
+                    ((sy < gap_top0) || (sy >= gap_bottom0)) && (sy < GROUND_Y);
+    wire pipe1_on = (sx >= gap_left1) && (sx < gap_right1) &&
+                    ((sy < gap_top1) || (sy >= gap_bottom1)) && (sy < GROUND_Y);
+    wire pipe2_on = (sx >= gap_left2) && (sx < gap_right2) &&
+                    ((sy < gap_top2) || (sy >= gap_bottom2)) && (sy < GROUND_Y);
+    wire pipe3_on = (sx >= gap_left3) && (sx < gap_right3) &&
+                    ((sy < gap_top3) || (sy >= gap_bottom3)) && (sy < GROUND_Y);
+    wire pipe4_on = (sx >= gap_left4) && (sx < gap_right4) &&
+                    ((sy < gap_top4) || (sy >= gap_bottom4)) && (sy < GROUND_Y);
 
-    localparam [11:0] C_PIPE = 12'h0C2; // 管道绿色
+    assign pipe_on = pipe0_on || pipe1_on || pipe2_on || pipe3_on || pipe4_on;
 
-    assign pipe_rgb = C_PIPE;
+    wire pipe_edge_on =
+        pipe_on &&
+        (
+            (sx == gap_left0) || (sx == gap_right0 - 16'sd1) ||
+            (sx == gap_left1) || (sx == gap_right1 - 16'sd1) ||
+            (sx == gap_left2) || (sx == gap_right2 - 16'sd1) ||
+            (sx == gap_left3) || (sx == gap_right3 - 16'sd1) ||
+            (sx == gap_left4) || (sx == gap_right4 - 16'sd1)
+        );
 
-    // ========================================================
-    // Convert pixel coordinate to signed value
-    // ========================================================
+    wire pipe_shadow_on =
+        pipe_on &&
+        (
+            (sx > gap_left0 + 16'sd18 && sx < gap_right0) ||
+            (sx > gap_left1 + 16'sd18 && sx < gap_right1) ||
+            (sx > gap_left2 + 16'sd18 && sx < gap_right2) ||
+            (sx > gap_left3 + 16'sd18 && sx < gap_right3) ||
+            (sx > gap_left4 + 16'sd18 && sx < gap_right4)
+        );
 
-    wire signed [15:0] sx; // 当前像素横坐标 signed 版本
-    wire signed [15:0] sy; // 当前像素纵坐标 signed 版本
+    wire [11:0] pipe_main =
+        (background_id == BG_SPACE) ? 12'h5CF :
+        (background_id == BG_ZJG)   ? 12'hA5F :
+        (background_id == BG_NIGHT) ? 12'h3A8 :
+        (background_id == BG_LAB)   ? 12'h2B9 :
+        (background_id == BG_CITY)  ? 12'h1C6 :
+                                      12'h0C2;
 
-    assign sx = {6'b0, pixel_x};
-    assign sy = {6'b0, pixel_y};
+    wire [11:0] pipe_edge =
+        (background_id == BG_SPACE) ? 12'hEFF :
+        (background_id == BG_ZJG)   ? 12'hF9D :
+        (background_id == BG_NIGHT) ? 12'h8FD :
+        (background_id == BG_LAB)   ? 12'h9FD :
+        (background_id == BG_CITY)  ? 12'hBFE :
+                                      12'h7F5;
 
-    // ========================================================
-    // Pipe0
-    //
-    // x 在 gap_left0 ~ gap_right0 内；
-    // y < gap_top0 是上管道；
-    // y >= gap_bottom0 是下管道；
-    // 中间 gap_top0 ~ gap_bottom0 是空隙。
-    // ========================================================
+    wire [11:0] pipe_shadow =
+        (background_id == BG_SPACE) ? 12'h247 :
+        (background_id == BG_ZJG)   ? 12'h527 :
+        (background_id == BG_NIGHT) ? 12'h154 :
+        (background_id == BG_LAB)   ? 12'h176 :
+        (background_id == BG_CITY)  ? 12'h074 :
+                                      12'h062;
 
-    wire pipe0_x_on;
-    wire pipe0_y_on;
-    wire pipe0_on;
-
-    assign pipe0_x_on =
-        (sx >= gap_left0) &&
-        (sx <  gap_right0);
-
-    assign pipe0_y_on =
-        (sy <  gap_top0) ||
-        (sy >= gap_bottom0);
-
-    assign pipe0_on =
-        pipe0_x_on &&
-        pipe0_y_on &&
-        (sy < GROUND_Y);
-
-
-    // ========================================================
-    // Pipe1
-    // ========================================================
-
-    wire pipe1_x_on;
-    wire pipe1_y_on;
-    wire pipe1_on;
-
-    assign pipe1_x_on =
-        (sx >= gap_left1) &&
-        (sx <  gap_right1);
-
-    assign pipe1_y_on =
-        (sy <  gap_top1) ||
-        (sy >= gap_bottom1);
-
-    assign pipe1_on =
-        pipe1_x_on &&
-        pipe1_y_on &&
-        (sy < GROUND_Y);
-
-
-    // ========================================================
-    // Pipe2
-    // ========================================================
-
-    wire pipe2_x_on;
-    wire pipe2_y_on;
-    wire pipe2_on;
-
-    assign pipe2_x_on =
-        (sx >= gap_left2) &&
-        (sx <  gap_right2);
-
-    assign pipe2_y_on =
-        (sy <  gap_top2) ||
-        (sy >= gap_bottom2);
-
-    assign pipe2_on =
-        pipe2_x_on &&
-        pipe2_y_on &&
-        (sy < GROUND_Y);
-
-
-    // ========================================================
-    // Pipe3
-    // ========================================================
-
-    wire pipe3_x_on;
-    wire pipe3_y_on;
-    wire pipe3_on;
-
-    assign pipe3_x_on =
-        (sx >= gap_left3) &&
-        (sx <  gap_right3);
-
-    assign pipe3_y_on =
-        (sy <  gap_top3) ||
-        (sy >= gap_bottom3);
-
-    assign pipe3_on =
-        pipe3_x_on &&
-        pipe3_y_on &&
-        (sy < GROUND_Y);
-
-
-    // ========================================================
-    // Pipe4
-    // ========================================================
-
-    wire pipe4_x_on;
-    wire pipe4_y_on;
-    wire pipe4_on;
-
-    assign pipe4_x_on =
-        (sx >= gap_left4) &&
-        (sx <  gap_right4);
-
-    assign pipe4_y_on =
-        (sy <  gap_top4) ||
-        (sy >= gap_bottom4);
-
-    assign pipe4_on =
-        pipe4_x_on &&
-        pipe4_y_on &&
-        (sy < GROUND_Y);
-
-
-    // ========================================================
-    // Total pipe signal
-    //
-    // 只要当前像素属于任意一根管道，就认为 pipe_on = 1。
-    // 因为所有管道当前画法相同，所以不需要区分是哪一根。
-    // ========================================================
-
-    assign pipe_on =
-        pipe0_on ||
-        pipe1_on ||
-        pipe2_on ||
-        pipe3_on ||
-        pipe4_on;
-
+    assign pipe_rgb = pipe_edge_on ? pipe_edge :
+                      (pipe_shadow_on ? pipe_shadow : pipe_main);
 endmodule

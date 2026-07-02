@@ -12,11 +12,10 @@ module sevenseg_hex(
     reg [3:0]  digit;
 
     always @(posedge clk or posedge rst) begin
-        if (rst) begin
+        if (rst)
             scan_cnt <= 16'd0;
-        end else begin
+        else
             scan_cnt <= scan_cnt + 1'b1;
-        end
     end
 
     always @(*) begin
@@ -48,7 +47,7 @@ module sevenseg_hex(
     end
 endmodule
 
-// K7 板级顶层：连接真实管脚、控制接口、游戏核心和分层 VGA 显示。
+// K7 板级顶层：连接真实管脚、控制接口、游戏核心、音效和分层 VGA 显示。
 module top_k7(
     input  wire       clk,
     input  wire       rstn,
@@ -84,7 +83,7 @@ module top_k7(
     wire ps2_space_down;
     wire ps2_enter_down;
 
-    // K7 板上 BTNX4 是按钮使能脚，不是游戏按键输入；拉低后 BTN[3:0] 才能正常工作。
+    // K7 板上 BTNX4 是按键使能脚，固定拉低后 BTN[3:0] 才能正常工作。
     assign BTNX4 = 1'b0;
 
     input_control u_control (
@@ -120,7 +119,7 @@ module top_k7(
     wire [15:0] score;
     wire [2:0] skin_id;
     wire [2:0] bird_frame;
-    wire [1:0] background_id;
+    wire [2:0] background_id;
     wire signed [15:0] gap_left0;
     wire signed [15:0] gap_right0;
     wire signed [15:0] gap_top0;
@@ -191,7 +190,7 @@ module top_k7(
     );
 
     background_control #(
-        .BACKGROUND_COUNT(4)
+        .BACKGROUND_COUNT(6)
     ) u_background_control (
         .clk(clk),
         .rst(rst),
@@ -255,6 +254,6 @@ module top_k7(
         .beep(beep)
     );
 
-    // LED 调试：背景编号、皮肤编号低位、音量档位和游戏状态。
-    assign LED = {background_id, skin_id[1:0], volume_sel, game_state};
+    // LED 调试：背景编号 3 位、皮肤最低位、音量 2 位、游戏状态 2 位。
+    assign LED = {background_id[2:0], skin_id[0], volume_sel, game_state};
 endmodule

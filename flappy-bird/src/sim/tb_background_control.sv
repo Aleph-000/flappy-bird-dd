@@ -6,12 +6,12 @@ module tb_background_control;
     reg clk = 1'b0;
     reg rst = 1'b1;
     reg background_next_level = 1'b0;
-    wire [1:0] background_id;
+    wire [2:0] background_id;
 
     always #5 clk = ~clk;
 
     background_control #(
-        .BACKGROUND_COUNT(4)
+        .BACKGROUND_COUNT(6)
     ) dut (
         .clk(clk),
         .rst(rst),
@@ -31,7 +31,7 @@ module tb_background_control;
     endtask
 
     task expect_background;
-        input [1:0] expected;
+        input [2:0] expected;
         begin
             if (background_id !== expected) begin
                 $error("background_id=%0d, expected=%0d", background_id, expected);
@@ -44,19 +44,25 @@ module tb_background_control;
         repeat (3) @(posedge clk);
         rst <= 1'b0;
         @(posedge clk);
-        expect_background(2'd0);
+        expect_background(3'd0);
 
         press_background();
-        expect_background(2'd1);
+        expect_background(3'd1);
 
         press_background();
-        expect_background(2'd2);
+        expect_background(3'd2);
 
         press_background();
-        expect_background(2'd3);
+        expect_background(3'd3);
 
         press_background();
-        expect_background(2'd0);
+        expect_background(3'd4);
+
+        press_background();
+        expect_background(3'd5);
+
+        press_background();
+        expect_background(3'd0);
 
         $display("tb_background_control passed");
         $finish;
