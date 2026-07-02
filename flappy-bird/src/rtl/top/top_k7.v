@@ -72,10 +72,13 @@ module top_k7(
     wire pause_level;
     wire restart_level;
     wire skin_next_level;
+    wire background_next_level;
     wire immortal;
     wire [1:0] speed_sel;
     wire [1:0] gravity_sel;
     wire [1:0] jump_sel;
+    wire [1:0] volume_sel;
+    wire score_only_mode;
     wire [3:0] btn_clean;
     wire [15:0] sw_clean;
     wire ps2_space_down;
@@ -95,10 +98,13 @@ module top_k7(
         .pause_level(pause_level),
         .restart_level(restart_level),
         .skin_next_level(skin_next_level),
+        .background_next_level(background_next_level),
         .immortal(immortal),
         .speed_sel(speed_sel),
         .gravity_sel(gravity_sel),
         .jump_sel(jump_sel),
+        .volume_sel(volume_sel),
+        .score_only_mode(score_only_mode),
         .btn_clean(btn_clean),
         .sw_clean(sw_clean),
         .ps2_space_down(ps2_space_down),
@@ -114,6 +120,7 @@ module top_k7(
     wire [15:0] score;
     wire [2:0] skin_id;
     wire [2:0] bird_frame;
+    wire [1:0] background_id;
     wire signed [15:0] gap_left0;
     wire signed [15:0] gap_right0;
     wire signed [15:0] gap_top0;
@@ -183,6 +190,16 @@ module top_k7(
         .frame_index(bird_frame)
     );
 
+    background_control #(
+        .BACKGROUND_COUNT(1)
+    ) u_background_control (
+        .clk(clk),
+        .rst(rst),
+        .game_state(game_state),
+        .background_next_level(background_next_level),
+        .background_id(background_id)
+    );
+
     display u_display (
         .clk(clk),
         .rst(rst),
@@ -191,6 +208,7 @@ module top_k7(
         .game_state(game_state),
         .skin_id(skin_id),
         .bird_frame(bird_frame),
+        .background_id(background_id),
         .score(score),
         .gap_left0(gap_left0),
         .gap_right0(gap_right0),
@@ -232,6 +250,8 @@ module top_k7(
         .rst(rst),
         .jump_event(jump_event),
         .score_event(score_event),
+        .volume_sel(volume_sel),
+        .score_only_mode(score_only_mode),
         .beep(beep)
     );
 

@@ -9,6 +9,7 @@ module display(
     input  wire [1:0] game_state,
     input  wire [2:0] skin_id,
     input  wire [2:0] bird_frame,
+    input  wire [1:0] background_id,
     input  wire [15:0] score,
 
     input  wire signed [15:0] gap_left0,
@@ -62,6 +63,7 @@ module display(
     bg_layer u_bg_layer (
         .pixel_x(pixel_x),
         .pixel_y(pixel_y),
+        .background_id(background_id),
         .bg_rgb(bg_rgb)
     );
 

@@ -111,10 +111,13 @@ module input_control #(
     output wire        pause_level,
     output wire        restart_level,
     output wire        skin_next_level,
+    output wire        background_next_level,
     output wire        immortal,
     output wire [1:0]  speed_sel,
     output wire [1:0]  gravity_sel,
     output wire [1:0]  jump_sel,
+    output wire [1:0]  volume_sel,
+    output wire        score_only_mode,
     output wire [3:0]  btn_clean,
     output wire [15:0] sw_clean,
     output wire        ps2_space_down,
@@ -152,10 +155,13 @@ module input_control #(
     // 操作映射：BTN3/Space/SW0 跳跃，BTN1/Enter/SW2 暂停。
     assign jump_level    = btn_clean[3] | sw_clean[0] | ps2_space_down;
     assign skin_next_level = btn_clean[2];
+    assign background_next_level = btn_clean[1];
     assign pause_level   = btn_clean[1] | sw_clean[2] | ps2_enter_down;
     assign restart_level = btn_clean[0] | sw_clean[15];
     assign immortal      = sw_clean[1];
     assign speed_sel     = sw_clean[5:4];
     assign gravity_sel   = sw_clean[7:6];
     assign jump_sel      = sw_clean[9:8];
+    assign volume_sel    = sw_clean[11:10];
+    assign score_only_mode = sw_clean[12];
 endmodule
