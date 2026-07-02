@@ -24,8 +24,8 @@ module bird#(
     //基本参数
     parameter SCREEN_WIDTH = 16'd640,
     parameter SCREEN_HEIGHT = 16'd480,
-    parameter BIRD_WIDTH=16'd64,
-    parameter BIRD_HEIGHT=16'd48,
+    parameter BIRD_WIDTH=16'd21,
+    parameter BIRD_HEIGHT=16'd16,
     //状态
     parameter IDLE = 2'b00,
     parameter PLAY = 2'b01,

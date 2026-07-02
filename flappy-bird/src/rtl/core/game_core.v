@@ -39,7 +39,7 @@ module game_core #(
     output wire signed [15:0] gap_top4,
     output wire signed [15:0] gap_bottom4
 );
-    localparam signed [15:0] BIRD_HALF_WIDTH = 16'sd32;
+    localparam signed [15:0] BIRD_HALF_WIDTH = 16'sd10;
 
     reg [31:0] game_cnt;
     reg        game_clk;

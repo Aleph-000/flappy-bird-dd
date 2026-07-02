@@ -35,8 +35,8 @@ module bird_layer(
     // Basic parameters
     // ========================================================
 
-    localparam signed [15:0] BIRD_WIDTH  = 16'sd64;
-    localparam signed [15:0] BIRD_HEIGHT = 16'sd48;
+    localparam signed [15:0] BIRD_WIDTH  = 16'sd21;
+    localparam signed [15:0] BIRD_HEIGHT = 16'sd16;
 
     // ========================================================
     // Color palette
@@ -115,26 +115,26 @@ module bird_layer(
     assign bird_outline =
         bird_on &&
         (
-            (bird_dx < 16'sd3) ||
-            (bird_dx >= BIRD_WIDTH - 16'sd3) ||
-            (bird_dy < 16'sd3) ||
-            (bird_dy >= BIRD_HEIGHT - 16'sd3)
+            (bird_dx < 16'sd1) ||
+            (bird_dx >= BIRD_WIDTH - 16'sd1) ||
+            (bird_dy < 16'sd1) ||
+            (bird_dy >= BIRD_HEIGHT - 16'sd1)
         );
 
     assign bird_wing =
         bird_on &&
-        (bird_dx >= 16'sd12) && (bird_dx < 16'sd30) &&
-        (bird_dy >= 16'sd25) && (bird_dy < 16'sd38);
+        (bird_dx >= 16'sd5) && (bird_dx < 16'sd12) &&
+        (bird_dy >= 16'sd8) && (bird_dy < 16'sd12);
 
     assign bird_beak =
         bird_on &&
-        (bird_dx >= 16'sd48) && (bird_dx < 16'sd64) &&
-        (bird_dy >= 16'sd18) && (bird_dy < 16'sd30);
+        (bird_dx >= 16'sd16) && (bird_dx < BIRD_WIDTH) &&
+        (bird_dy >= 16'sd6) && (bird_dy < 16'sd10);
 
     assign bird_eye =
         bird_on &&
-        (bird_dx >= 16'sd40) && (bird_dx < 16'sd48) &&
-        (bird_dy >= 16'sd10) && (bird_dy < 16'sd18);
+        (bird_dx >= 16'sd14) && (bird_dx < 16'sd17) &&
+        (bird_dy >= 16'sd3) && (bird_dy < 16'sd6);
 
     // ========================================================
     // Bird color priority

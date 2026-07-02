@@ -24,8 +24,8 @@ module collision#(
     //basic parameter
     parameter SCREEN_WIDTH = 16'd640,
     parameter SCREEN_HEIGHT = 16'd480,
-    parameter BIRD_WIDTH=16'd64,
-    parameter BIRD_HEIGHT=16'd48,
+    parameter BIRD_WIDTH=16'd21,
+    parameter BIRD_HEIGHT=16'd16,
     //state
     parameter IDLE = 2'b00,
     parameter PLAY = 2'b01,
@@ -39,7 +39,7 @@ module collision#(
     //pipe
     parameter signed [15:0]PIPE_V=-9,
     parameter MINGAP=16'd100,
-    parameter GAPWIDTH=16'd120
+    parameter GAPWIDTH=16'd60
     )
     (
         input wire clk,

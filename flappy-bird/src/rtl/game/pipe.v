@@ -24,8 +24,8 @@ module pipe#(
     //basic parameter
     parameter SCREEN_WIDTH = 16'd640,
     parameter SCREEN_HEIGHT = 16'd480,
-    parameter BIRD_WIDTH=16'd64,
-    parameter BIRD_HEIGHT=16'd48,
+    parameter BIRD_WIDTH=16'd21,
+    parameter BIRD_HEIGHT=16'd16,
     //state
     parameter IDLE = 2'b00,
     parameter PLAY = 2'b01,
@@ -40,8 +40,8 @@ module pipe#(
     parameter signed [15:0] GROUND_Y=16'sd420,
     parameter signed [15:0] MIN_GAP_TOP=16'sd60,
     parameter signed [15:0] GAP_HEIGHT=16'sd140,
-    parameter signed [15:0] GAPWIDTH=16'sd120,
-    parameter signed [15:0] PIPE_SPACING=16'sd200
+    parameter signed [15:0] GAPWIDTH=16'sd60,
+    parameter signed [15:0] PIPE_SPACING=16'sd300
     )
     (
         input wire clk,

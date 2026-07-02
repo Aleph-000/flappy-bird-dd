@@ -3,8 +3,10 @@
 // 游戏逻辑单元测试：覆盖小鸟运动、管道生成/移动、碰撞边界。
 module tb_game_logic;
     localparam signed [15:0] GROUND_Y   = 16'sd420;
-    localparam signed [15:0] BIRD_HALF_H = 16'sd24;
+    localparam signed [15:0] BIRD_HALF_H = 16'sd8;
     localparam signed [15:0] GAP_HEIGHT = 16'sd140;
+    localparam signed [15:0] PIPE_WIDTH = 16'sd60;
+    localparam signed [15:0] PIPE_SPACING = 16'sd300;
 
     reg clk = 1'b0;
     always #5 clk = ~clk;
@@ -119,6 +121,7 @@ module tb_game_logic;
     );
         begin
             assert (right > left) else $fatal(1, "pipe width is invalid");
+            assert ((right - left) == PIPE_WIDTH) else $fatal(1, "pipe width should be half size");
             assert ((bottom - top) == GAP_HEIGHT) else $fatal(1, "pipe gap height is invalid");
             assert (top >= 16'sd60) else $fatal(1, "pipe gap top is too high");
             assert (bottom <= GROUND_Y) else $fatal(1, "pipe gap enters ground");
@@ -193,6 +196,8 @@ module tb_game_logic;
         pipe_state = 2'b00;
         tick(2);
         check_all_gaps();
+        assert ((gap_left1 - gap_left0) == PIPE_SPACING) else $fatal(1, "pipe spacing is invalid");
+        assert ((gap_left2 - gap_left1) == PIPE_SPACING) else $fatal(1, "pipe spacing is invalid");
         old_left0 = gap_left0;
         pipe_state = 2'b01;
         tick(1);
