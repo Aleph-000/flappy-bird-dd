@@ -14,8 +14,10 @@ flappy-bird-dd/
 |   |-- space/
 |   `-- city/
 |-- skins/
+|   |-- dyb/
 |   |-- original/
-|   `-- qiu_shi_ying/
+|   |-- qiu_shi_ying/
+|   `-- space/
 `-- flappy-bird/
     |-- flappy-bird.xpr
     |-- verify_build.tcl
@@ -102,11 +104,22 @@ skins/<skin_name>/frames_21x21/frame_1_21x21.png
 
 也可以使用 `frames_21x16`，生成脚本会居中补透明边到 `21x21`。新增或替换皮肤后运行：
 
+如果皮肤图片直接放在 `skins/<skin_name>/` 根目录，也支持 `Sprite1.png`、`Sprite2.png` 这类连续命名；脚本会自动跳过 `preview`、`sheet` 这类预览或整图文件。空皮肤文件夹会被跳过。
+
 ```powershell
 python flappy-bird/tools/generate_skin_rom.py
 ```
 
 脚本会更新 `flappy-bird/src/rtl/display/bird_sprite_rom.v`。
+
+当前生成进 ROM 的皮肤编号：
+
+| 编号 | 皮肤 | 帧数 |
+| --- | --- | --- |
+| `0` | `original` | 6 |
+| `1` | `dyb` | 6 |
+| `2` | `qiu_shi_ying` | 6 |
+| `3` | `space` | 6 |
 
 ## 背景
 

@@ -11,7 +11,8 @@ module background_control #(
     output reg  [1:0] background_id
 );
     localparam [1:0] IDLE = 2'b00;
-    localparam [1:0] BACKGROUND_COUNT_VALUE = BACKGROUND_COUNT;
+    // 背景数量可能等于 4，不能压成 2 位，否则 4 会被截断成 0。
+    localparam integer BACKGROUND_COUNT_VALUE = BACKGROUND_COUNT;
 
     reg background_next_d;
     wire background_next_pulse = background_next_level & ~background_next_d;

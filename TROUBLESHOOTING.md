@@ -118,6 +118,15 @@ python flappy-bird\tools\generate_skin_rom.py
 
 然后重新生成 bitstream。
 
+皮肤扫描规则：
+
+```text
+优先读取 skins/<name>/frames*/ 下的 PNG
+其次读取 skins/<name>/frame*.png
+最后读取 skins/<name>/*.png，并跳过 preview/sheet
+空文件夹不生成皮肤编号
+```
+
 ## 4. 新增背景后画面没变化
 
 ### 根因
@@ -163,6 +172,22 @@ ui_layer.v background_id input
 ```
 
 `ui_layer.v` 现在根据 `background_id` 切换明暗 UI 配色；如果修改 `ui_layer` 端口，必须同步更新 `display.v` 中的实例化。
+
+### 背景切换按键没反应
+
+如果背景数设置为 4，但 `background_control.v` 中把 `BACKGROUND_COUNT` 保存到 2 位 `localparam [1:0]`，值 `4` 会被截断成 `0`，导致按 `BTN[1]` 时一直回到背景 0，看起来没有任何切换。
+
+固定写法：
+
+```verilog
+localparam integer BACKGROUND_COUNT_VALUE = BACKGROUND_COUNT;
+```
+
+不要写成：
+
+```verilog
+localparam [1:0] BACKGROUND_COUNT_VALUE = BACKGROUND_COUNT;
+```
 
 ## 5. 快速验证流程
 

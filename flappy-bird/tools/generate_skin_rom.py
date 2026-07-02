@@ -58,6 +58,13 @@ def list_frame_files(skin_dir: Path) -> list[Path]:
             candidates.extend(sorted(subdir.glob("*.png"), key=frame_number))
     if not candidates:
         candidates.extend(sorted(skin_dir.glob("frame*.png"), key=frame_number))
+    if not candidates:
+        # 支持 Sprite1.png、bird_01.png 等根目录连续图片；预览图/sheet 不作为动画帧。
+        for image in sorted(skin_dir.glob("*.png"), key=frame_number):
+            name = image.stem.lower()
+            if "preview" in name or "sheet" in name:
+                continue
+            candidates.append(image)
     return candidates[:MAX_FRAMES]
 
 
