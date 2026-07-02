@@ -52,7 +52,7 @@ flappy-bird-dd/
 3. 点击 `Generate Bitstream`，完成后选择 `Open Hardware Manager` 并烧录生成的 `.bit` 文件。
 4. 接好 VGA 显示器；可选接 PS/2 键盘。
 5. 上板后先按 `rstn` 复位键复位一次。
-6. 按 `BTNX4` 或 `BTN[3]` 开始/跳跃；接键盘时也可以按 `Space`。
+6. 按 `BTN[3]` 开始/跳跃；接键盘时也可以按 `Space`。
 7. 按 `BTN[1]` 暂停/继续；接键盘时也可以按 `Enter`。
 8. 按 `BTN[0]` 重新开始。
 
@@ -65,6 +65,8 @@ flappy-bird-dd/
 | `SW[2]` | 暂停/继续，适合拨码测试。 |
 | `SW[5:4]` | 游戏速度档位：`00` 60Hz，`01` 75Hz，`10` 90Hz，`11` 120Hz。 |
 | `SW[15]` | 重新开始。 |
+
+注意：`BTNX4` 在本 K7 板接口中是按钮使能输出，不是玩家操作按键。顶层会把 `BTNX4` 拉低，使 `BTN[3:0]` 正常工作。
 
 调试输出：
 
@@ -83,7 +85,6 @@ module top_k7(
     input  wire       clk,
     input  wire       rstn,
     input  wire [3:0] BTN,
-    input  wire       BTNX4,
     input  wire [15:0] SW,
     input  wire       ps2_clk,
     input  wire       ps2_data,
@@ -94,7 +95,8 @@ module top_k7(
     output wire [3:0] g,
     output wire [3:0] b,
     output wire       hs,
-    output wire       vs
+    output wire       vs,
+    output wire       BTNX4
 );
 ```
 
@@ -103,13 +105,13 @@ module top_k7(
 | `clk` | 输入 | K7 板 100MHz 主时钟。 |
 | `rstn` | 输入 | 低有效复位，顶层内部转换为高有效 `rst`。 |
 | `BTN[3:0]` | 输入 | 板载独立按钮。 |
-| `BTNX4` | 输入 | 板载中心按钮。 |
 | `SW[15:0]` | 输入 | 16 位拨码开关。 |
 | `ps2_clk` / `ps2_data` | 输入 | PS/2 键盘时钟和数据。 |
 | `LED[7:0]` | 输出 | 调试 LED。 |
 | `SEGMENT[7:0]` / `AN[3:0]` | 输出 | 七段管段选和位选。 |
 | `r/g/b[3:0]` | 输出 | VGA 12-bit RGB 输出。 |
 | `hs` / `vs` | 输出 | VGA 行同步和场同步。 |
+| `BTNX4` | 输出 | 按钮使能脚，顶层固定拉低以启用 `BTN[3:0]`。 |
 
 ## 模块接口
 
@@ -122,7 +124,6 @@ module input_control #(
     input  wire        clk,
     input  wire        rst,
     input  wire [3:0]  btn,
-    input  wire        btnx4,
     input  wire [15:0] sw,
     input  wire        ps2_clk,
     input  wire        ps2_data,
@@ -132,7 +133,6 @@ module input_control #(
     output wire        immortal,
     output wire [1:0]  speed_sel,
     output wire [3:0]  btn_clean,
-    output wire        btnx4_clean,
     output wire [15:0] sw_clean,
     output wire        ps2_space_down,
     output wire        ps2_enter_down
@@ -141,7 +141,7 @@ module input_control #(
 
 主要功能：
 
-- 对 `BTN`、`BTNX4`、`SW` 做同步和消抖。
+- 对 `BTN`、`SW` 做同步和消抖。
 - 解码 PS/2 键盘的 `Space` 和 `Enter`。
 - 输出统一的游戏控制信号：跳跃、暂停、重开、无敌、速度档位。
 

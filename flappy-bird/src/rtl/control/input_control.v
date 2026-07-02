@@ -104,7 +104,6 @@ module input_control #(
     input  wire        clk,
     input  wire        rst,
     input  wire [3:0]  btn,
-    input  wire        btnx4,
     input  wire [15:0] sw,
     input  wire        ps2_clk,
     input  wire        ps2_data,
@@ -114,7 +113,6 @@ module input_control #(
     output wire        immortal,
     output wire [1:0]  speed_sel,
     output wire [3:0]  btn_clean,
-    output wire        btnx4_clean,
     output wire [15:0] sw_clean,
     output wire        ps2_space_down,
     output wire        ps2_enter_down
@@ -139,13 +137,6 @@ module input_control #(
         end
     endgenerate
 
-    debounce #(.STABLE_COUNT(DEBOUNCE_COUNT)) u_btnx4_db (
-        .clk(clk),
-        .rst(rst),
-        .noisy(btnx4),
-        .clean(btnx4_clean)
-    );
-
     ps2_keys u_ps2 (
         .clk(clk),
         .rst(rst),
@@ -155,8 +146,8 @@ module input_control #(
         .enter_down(ps2_enter_down)
     );
 
-    // 操作映射：中心键/右侧键/Space/SW0 跳跃，BTN1/Enter/SW2 暂停。
-    assign jump_level    = btnx4_clean | btn_clean[3] | sw_clean[0] | ps2_space_down;
+    // 操作映射：BTN3/Space/SW0 跳跃，BTN1/Enter/SW2 暂停。
+    assign jump_level    = btn_clean[3] | sw_clean[0] | ps2_space_down;
     assign pause_level   = btn_clean[1] | sw_clean[2] | ps2_enter_down;
     assign restart_level = btn_clean[0] | sw_clean[15];
     assign immortal      = sw_clean[1];

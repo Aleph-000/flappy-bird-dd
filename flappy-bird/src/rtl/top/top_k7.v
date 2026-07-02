@@ -53,7 +53,6 @@ module top_k7(
     input  wire       clk,
     input  wire       rstn,
     input  wire [3:0] BTN,
-    input  wire       BTNX4,
     input  wire [15:0] SW,
     input  wire       ps2_clk,
     input  wire       ps2_data,
@@ -64,7 +63,8 @@ module top_k7(
     output wire [3:0] g,
     output wire [3:0] b,
     output wire       hs,
-    output wire       vs
+    output wire       vs,
+    output wire       BTNX4
 );
     wire rst = ~rstn;
     wire jump_level;
@@ -73,16 +73,17 @@ module top_k7(
     wire immortal;
     wire [1:0] speed_sel;
     wire [3:0] btn_clean;
-    wire btnx4_clean;
     wire [15:0] sw_clean;
     wire ps2_space_down;
     wire ps2_enter_down;
+
+    // K7 板上 BTNX4 是按钮使能脚，不是游戏按键输入；拉低后 BTN[3:0] 才能正常工作。
+    assign BTNX4 = 1'b0;
 
     input_control u_control (
         .clk(clk),
         .rst(rst),
         .btn(BTN),
-        .btnx4(BTNX4),
         .sw(SW),
         .ps2_clk(ps2_clk),
         .ps2_data(ps2_data),
@@ -92,7 +93,6 @@ module top_k7(
         .immortal(immortal),
         .speed_sel(speed_sel),
         .btn_clean(btn_clean),
-        .btnx4_clean(btnx4_clean),
         .sw_clean(sw_clean),
         .ps2_space_down(ps2_space_down),
         .ps2_enter_down(ps2_enter_down)
