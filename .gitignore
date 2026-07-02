@@ -1,0 +1,13 @@
+# Vivado generated files
+.Xil/
+*.jou
+*.log
+*.pb
+*.wdb
+*.wdf
+dfx_runtime.txt
+xsim.dir/
+
+# Local Vivado project cache and hardware session state
+*.cache/
+*.hw/

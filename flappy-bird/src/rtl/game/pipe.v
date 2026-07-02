@@ -128,7 +128,7 @@ module pipe#(
                         end
                         else begin
                             gap_left[i]<=gap_left[i]+PIPE_V-score/5;
-                            gap_right[i]<=gap_right[i]+PIPE_V-score/5;;
+                            gap_right[i]<=gap_right[i]+PIPE_V-score/5;
                         end
                     end
 
