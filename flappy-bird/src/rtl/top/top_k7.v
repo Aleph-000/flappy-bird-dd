@@ -53,8 +53,6 @@ module top_k7(
     input  wire       rstn,
     input  wire [3:0] BTN,
     input  wire [15:0] SW,
-    input  wire       ps2_clk,
-    input  wire       ps2_data,
     output wire [7:0] LED,
     output wire [7:0] SEGMENT,
     output wire [3:0] AN,
@@ -80,8 +78,6 @@ module top_k7(
     wire score_only_mode;
     wire [3:0] btn_clean;
     wire [15:0] sw_clean;
-    wire ps2_space_down;
-    wire ps2_enter_down;
 
     // K7 板上 BTNX4 是按键使能脚，固定拉低后 BTN[3:0] 才能正常工作。
     assign BTNX4 = 1'b0;
@@ -91,8 +87,6 @@ module top_k7(
         .rst(rst),
         .btn(BTN),
         .sw(SW),
-        .ps2_clk(ps2_clk),
-        .ps2_data(ps2_data),
         .jump_level(jump_level),
         .pause_level(pause_level),
         .restart_level(restart_level),
@@ -105,9 +99,7 @@ module top_k7(
         .volume_sel(volume_sel),
         .score_only_mode(score_only_mode),
         .btn_clean(btn_clean),
-        .sw_clean(sw_clean),
-        .ps2_space_down(ps2_space_down),
-        .ps2_enter_down(ps2_enter_down)
+        .sw_clean(sw_clean)
     );
 
     wire signed [15:0] bird_x;

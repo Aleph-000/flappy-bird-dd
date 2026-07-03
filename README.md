@@ -1,6 +1,6 @@
 # Flappy Bird Digital Design Project
 
-这是数字逻辑设计课程的 FPGA 上板小游戏项目，实现 Flappy Bird 的游戏逻辑、VGA 分层显示、按键/开关/PS2 控制、音效、皮肤选择和背景选择。
+这是数字逻辑设计课程的 FPGA 上板小游戏项目，实现 Flappy Bird 的游戏逻辑、VGA 分层显示、按键/开关控制、音效、皮肤选择和背景选择。
 
 ## 文件结构
 
@@ -56,22 +56,17 @@ vivado -mode batch -source verify_build.tcl
 | `BTN[2]` | 开始界面切换皮肤 |
 | `BTN[1]` | 开始界面切换背景；游戏中暂停 / 继续 |
 | `BTN[0]` | 重新开始 |
-| `Space` | PS2 键盘跳跃 |
-| `Enter` | PS2 键盘暂停 / 继续 |
 
 ## 开关
 
 | 开关 | 功能 |
 | --- | --- |
-| `SW[0]` | 跳跃/开始，便于无键盘测试 |
 | `SW[1]` | 无敌模式，屏蔽碰撞导致的游戏结束 |
-| `SW[2]` | 暂停/继续 |
 | `SW[5:4]` | 游戏速度档位：`00` 60Hz，`01` 75Hz，`10` 90Hz，`11` 120Hz |
 | `SW[7:6]` | 重力档位：`00` 最慢，`11` 最快 |
 | `SW[9:8]` | 跳跃初速度档位：`00` 最低，约为原速度 1/2 |
 | `SW[11:10]` | 音量 4 档 |
 | `SW[12]` | 音效模式：`0` 跳跃和得分都有音效，`1` 仅得分音效 |
-| `SW[15]` | 重新开始 |
 
 `BTNX4` 是 K7 板的按键使能脚，顶层固定拉低，不是玩家操作键。
 
@@ -125,8 +120,6 @@ module top_k7(
     input  wire       rstn,
     input  wire [3:0] BTN,
     input  wire [15:0] SW,
-    input  wire       ps2_clk,
-    input  wire       ps2_data,
     output wire [7:0] LED,
     output wire [7:0] SEGMENT,
     output wire [3:0] AN,

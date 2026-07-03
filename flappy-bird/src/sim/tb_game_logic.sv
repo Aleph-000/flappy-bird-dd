@@ -114,6 +114,13 @@ module tb_game_logic;
         end
     endtask
 
+    task automatic expect_true(input condition, input [255:0] message);
+        begin
+            if (!condition)
+                $fatal(1, "%0s", message);
+        end
+    endtask
+
     task automatic check_one_gap(
         input signed [15:0] left,
         input signed [15:0] right,
@@ -121,11 +128,11 @@ module tb_game_logic;
         input signed [15:0] bottom
     );
         begin
-            assert (right > left) else $fatal(1, "pipe width is invalid");
-            assert ((right - left) == PIPE_WIDTH) else $fatal(1, "pipe width should be half size");
-            assert ((bottom - top) == GAP_HEIGHT) else $fatal(1, "pipe gap height is invalid");
-            assert (top >= 16'sd60) else $fatal(1, "pipe gap top is too high");
-            assert (bottom <= GROUND_Y) else $fatal(1, "pipe gap enters ground");
+            expect_true(right > left, "pipe width is invalid");
+            expect_true((right - left) == PIPE_WIDTH, "pipe width should match PIPE_WIDTH");
+            expect_true((bottom - top) == GAP_HEIGHT, "pipe gap height is invalid");
+            expect_true(top >= 16'sd60, "pipe gap top is too high");
+            expect_true(bottom <= GROUND_Y, "pipe gap enters ground");
         end
     endtask
 
@@ -153,60 +160,60 @@ module tb_game_logic;
         tick(2);
         bird_rst = 1'b0;
         tick(1);
-        assert (bird_state == 2'b00) else $fatal(1, "bird should reset to IDLE");
-        assert (bird_y == 16'sd240) else $fatal(1, "bird should reset to screen center");
+        expect_true(bird_state == 2'b00, "bird should reset to IDLE");
+        expect_true(bird_y == 16'sd240, "bird should reset to screen center");
 
         bird_jump = 1'b1;
         tick(1);
         bird_jump = 1'b0;
         tick(1);
-        assert (bird_state == 2'b01) else $fatal(1, "bird should enter PLAY after jump");
+        expect_true(bird_state == 2'b01, "bird should enter PLAY after jump");
 
         start_y = bird_y;
         tick(40);
-        assert (bird_y > start_y) else $fatal(1, "bird should fall under gravity");
+        expect_true(bird_y > start_y, "bird should fall under gravity");
 
         start_y = bird_y;
         bird_pause = 1'b1;
         tick(1);
         bird_pause = 1'b0;
         tick(5);
-        assert (bird_state == 2'b11) else $fatal(1, "bird should enter PAUSE");
-        assert (bird_y == start_y) else $fatal(1, "bird should hold position while paused");
+        expect_true(bird_state == 2'b11, "bird should enter PAUSE");
+        expect_true(bird_y == start_y, "bird should hold position while paused");
         bird_pause = 1'b1;
         tick(1);
         bird_pause = 1'b0;
         tick(1);
-        assert (bird_state == 2'b01) else $fatal(1, "bird should resume from PAUSE");
+        expect_true(bird_state == 2'b01, "bird should resume from PAUSE");
 
         bird_jump = 1'b1;
         tick(1);
         bird_jump = 1'b0;
         jump_y = bird_y;
         tick(3);
-        assert (bird_y < jump_y) else $fatal(1, "bird should move upward after jump");
+        expect_true(bird_y < jump_y, "bird should move upward after jump");
 
         bird_collision = 1'b1;
         tick(1);
         bird_collision = 1'b0;
         tick(1);
-        assert (bird_state == 2'b10) else $fatal(1, "bird should enter GAMEOVER after collision");
+        expect_true(bird_state == 2'b10, "bird should enter GAMEOVER after collision");
 
         // 管道：初始化在屏幕右侧，播放时左移，缺口高度和地面边界始终合法。
         pipe_score = 16'd0;
         pipe_state = 2'b00;
         tick(2);
         check_all_gaps();
-        assert ((gap_left1 - gap_left0) == PIPE_SPACING) else $fatal(1, "pipe spacing is invalid");
-        assert ((gap_left2 - gap_left1) == PIPE_SPACING) else $fatal(1, "pipe spacing is invalid");
+        expect_true((gap_left1 - gap_left0) == PIPE_SPACING, "pipe spacing is invalid");
+        expect_true((gap_left2 - gap_left1) == PIPE_SPACING, "pipe spacing is invalid");
         old_left0 = gap_left0;
         pipe_state = 2'b01;
         tick(1);
-        assert (gap_left0 == old_left0 - 16'sd4) else $fatal(1, "pipe should move left at base speed");
+        expect_true(gap_left0 == old_left0 - 16'sd4, "pipe should move left at base speed");
         old_left0 = gap_left0;
         pipe_state = 2'b11;
         tick(3);
-        assert (gap_left0 == old_left0) else $fatal(1, "pipe should hold position while paused");
+        expect_true(gap_left0 == old_left0, "pipe should hold position while paused");
         pipe_state = 2'b01;
         repeat (260) begin
             tick(1);
@@ -219,21 +226,21 @@ module tb_game_logic;
         c_gap_bottom0 = GROUND_Y;
         test_bird_y = GROUND_Y - BIRD_HALF_H - 16'sd1;
         tick(1);
-        assert (!collision_hit) else $fatal(1, "bird should survive just above ground");
+        expect_true(!collision_hit, "bird should survive just above ground");
 
         test_bird_y = GROUND_Y - BIRD_HALF_H;
         tick(1);
-        assert (collision_hit) else $fatal(1, "bird should collide with ground line");
+        expect_true(collision_hit, "bird should collide with ground line");
 
         c_gap_top0 = 16'sd100;
         c_gap_bottom0 = 16'sd240;
         test_bird_y = 16'sd170;
         tick(1);
-        assert (!collision_hit) else $fatal(1, "bird should pass inside pipe gap");
+        expect_true(!collision_hit, "bird should pass inside pipe gap");
 
         test_bird_y = 16'sd80;
         tick(1);
-        assert (collision_hit) else $fatal(1, "bird should collide with upper pipe");
+        expect_true(collision_hit, "bird should collide with upper pipe");
 
         $display("tb_game_logic PASS");
         $finish;
