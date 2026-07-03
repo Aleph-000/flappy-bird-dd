@@ -13,3 +13,11 @@ xsim.dir/
 *.hw/
 *.runs/
 *.srcs/
+
+# Local Vivado waveform/screenshot sessions
+*.wcfg
+vivado_pid*.str
+flappy-bird/make_report_waves.tcl
+flappy-bird/open_*_for_screenshot.tcl
+flappy-bird/report_*_wave.tcl
+flappy-bird/report_*_gui.tcl
